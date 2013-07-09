@@ -1,3 +1,10 @@
+2013-07-09  Alan D. Salewski  <salewski@att.net>
+
+	RELEASED screen-wrappers 0.1.0
+
+	* configure.ac: set version to 0.1.0 for release
+	* NEWS: release date for screen-wrappers 0.1.0
+
 2013-07-08  Alan D. Salewski  <salewski@att.net>
 
 	* bootstrap: new file
