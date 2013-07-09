@@ -1,5 +1,9 @@
 2013-07-09  Alan D. Salewski  <salewski@att.net>
 
+	* configure.ac: set version to 0.1.1-snapshot for next dev cycle
+	* NEWS: created empty new section for future 0.1.1 release
+
+
 	RELEASED screen-wrappers 0.1.0
 
 	* configure.ac: set version to 0.1.0 for release
