@@ -1,5 +1,7 @@
 2013-07-09  Alan D. Salewski  <salewski@att.net>
 
+	* src/main/bash/bin/screen-ls.in: doc fixes
+
 	* configure.ac: set version to 0.1.2-snapshot for next dev cycle
 	* NEWS: created empty news section for future 0.1.2 release
 

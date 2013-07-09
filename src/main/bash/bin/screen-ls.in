@@ -470,10 +470,10 @@ For reference, the default output of C<screen -ls> might look like this:
     49 Sockets in /var/run/screen/S-ads.
 
 That output is truncated, but you get the idea. When there are only two or
-three L<screen(1)> session active, the above output works fine. However, when
-there are a large number of L<screen(1)> sessions active (such as in above
-example, where there are 49), it can become difficult to find the interesting
-ones. Enter C<screen-ls>.
+three L<screen(1)> session active, then the default output works
+fine. However, when there are a large number of L<screen(1)> sessions active
+(such as in above example, where there are 49), it can become difficult to
+find the interesting ones. Enter C<screen-ls>.
 
 By default, C<screen-ls> strips away all data except the L<screen(1)> session
 name, and it removes the pid and following C<.> character from those, as
@@ -567,7 +567,7 @@ Exits with 0 (zero) status on success, nonzero on error.
 
 =item *
 
-Internally checks that the exit status of C<screen -ls> because empirical
+Internally checks that the exit status of C<screen -ls> is 1 because empirical
 testing reveals that that is the exit status returned even upon success
 (unless we were to add the C<-q> option, which would have the undesirable
 effect of suppressing the output we are trying to format). See comments in
