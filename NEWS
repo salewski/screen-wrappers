@@ -13,6 +13,14 @@ fixed will be noted here, as well.
 
 ** fixes
 
+**** screen-ls: corrected 'screen -q -ls' exit status checking
+
+The screen-wrappers-0.1.0 release included a version of 'screen-ls' that had
+code left in that was being used by the author to verify error handling by
+forcing the exception condition, with the result that the program was
+unusable. Sorry! This has been corrected.
+
+
 ** improvements
 
 ------------------------------------------------------------------------------

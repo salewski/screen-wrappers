@@ -18,12 +18,11 @@
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-# screen-ls: Pretty-prints the output from 'screen -ls' (actually, 'screen -q
-# -ls') on stdout. Prints the session names (without the leading pid and '.'
-# char) from the output of the 'screen -ls' command. With the '-l' ('--long')
-# option, will print the full output in a readable table. With the '-p'
-# ('--show-pid') option, will include the pid and '.' char which are
-# suppressed by default.
+# screen-ls: Pretty-prints the output from 'screen -ls' on stdout. Prints the
+# session names (without the leading pid and '.'  char) from the output of the
+# 'screen -ls' command. With the '-l' ('--long') option, will print the full
+# output in a readable table. With the '-p' ('--show-pid') option, will
+# include the pid and '.' char which are suppressed by default.
 #
 # Any options not recognized by 'screen-ls' will be passed through to
 # 'screen'. You can explicitly stop 'screen-ls' options processing by using
@@ -248,7 +247,7 @@ if $opt_show_long; then
     # of our sed 's' commands below.
     re_sed_l_chunks='^[[:space:]]*\(.\{1,\}\)[[:space:]]\{1,\}\([(][^)]\{1,\}[)]\)[[:space:]]\{1,\}\([(][^)]\{1,\}[)]\)[[:space:]]*$'
 
-    "${PROG_SCREEN}" -q -ls "${ARGS_FOR_SCREEN[@]}" \
+    "${PROG_SCREEN}" -ls "${ARGS_FOR_SCREEN[@]}" \
     | tail -n +2 \
     | head -n -2 \
     | $chop_pid_command \
@@ -285,10 +284,8 @@ if $opt_show_long; then
 
     # Note that we can't use bash's 'pipefail' option because 'screen -ls' (at
     # least as of the 4.01.00devel version shipped with Debian) exits with
-    # non-zero status upon success. We use the '-q' option to force some
-    # sanity onto this scenario (see screen(1)); there's an open (as of
-    # 2013-07-08) issue for this filed in the upstream issue tracker for this
-    # behavior:
+    # non-zero status upon success. There's an open (as of 2013-07-08) issue
+    # for this filed in the upstream issue tracker for this behavior:
     #
     #     http://savannah.gnu.org/bugs/?26750
     #
@@ -299,14 +296,14 @@ if $opt_show_long; then
 
     declare -a t_estat_arr=( ${PIPESTATUS[@]} )
 
-    test ${t_estat_arr[0]} -lt 9 &&  # screen
+    test ${t_estat_arr[0]} -eq 1 &&  # screen   XXX: does 1 always mean success here?
     test ${t_estat_arr[1]} -eq 0 &&  # tail
     test ${t_estat_arr[2]} -eq 0 &&  # head
     test ${t_estat_arr[3]} -eq 0 &&  # $chop_pid_command
     test ${t_estat_arr[4]} -eq 0 &&  # while loop
     test ${t_estat_arr[5]} -eq 0 ||  # ${PROG_COLUMN}
     {
-        printf "${PROG} (error): was error while processing output of 'screen -q -ls' command; PIPESTATUS: %s %s %s %s %s; bailing out\n" "${t_estat_arr[@]}" 1>&2
+        printf "${PROG} (error): was error while processing output of 'screen -ls' command; PIPESTATUS: %s %s %s %s %s; bailing out\n" "${t_estat_arr[@]}" 1>&2
         exit 1
     }
 
@@ -317,24 +314,23 @@ else
     # and session state tokens at the end of each line of 'screen -ls' output,
     # and then keeping everything that appears in front of them.
 
-    "${PROG_SCREEN}" -q -ls "${ARGS_FOR_SCREEN[@]}" \
+    "${PROG_SCREEN}" -ls "${ARGS_FOR_SCREEN[@]}" \
     | tail -n +2 \
     | head -n -2 \
     | $chop_pid_command \
     | sed -n -e 's#^[[:space:]]*\(.\{1,\}\)\([[:space:]]\{1,\}[(][^)]\{1,\}[)]\)\{2\}[[:space:]]*$#\1#p'
 
-    # See notes above on why we can't use bash's 'pipefail' option, and effect
-    # of screen's '-q' option, etc.
+    # See notes above on why we can't use bash's 'pipefail' option, etc.
 
     declare -a t_estat_arr=( ${PIPESTATUS[@]} )
 
-    test ${t_estat_arr[0]} -lt 9 &&  # screen
+    test ${t_estat_arr[0]} -eq 1 &&  # screen   XXX: does 1 always mean success here?
     test ${t_estat_arr[1]} -eq 0 &&  # tail
     test ${t_estat_arr[2]} -eq 0 &&  # head
     test ${t_estat_arr[3]} -eq 0 &&  # $chop_pid_command
     test ${t_estat_arr[4]} -eq 0 ||  # sed
     {
-        printf "${PROG} (error): was error while processing output of 'screen -q -ls' command; PIPESTATUS: %s %s %s %s %s; bailing out\n" "${t_estat_arr[@]}" 1>&2
+        printf "${PROG} (error): was error while processing output of 'screen -ls' command; PIPESTATUS: %s %s %s %s %s; bailing out\n" "${t_estat_arr[@]}" 1>&2
         exit 1
     }
 
@@ -571,10 +567,11 @@ Exits with 0 (zero) status on success, nonzero on error.
 
 =item *
 
-Internally invokes C<screen -ls -q>, not just C<screen -ls> as advertized
-above; this is needed to allow for error checking because C<screen -ls> exits
-with a nonzero status on success. See comments in C<screen-ls> source code for
-more details.
+Internally checks that the exit status of C<screen -ls> because empirical
+testing reveals that that is the exit status returned even upon success
+(unless we were to add the C<-q> option, which would have the undesirable
+effect of suppressing the output we are trying to format). See comments in
+C<screen-ls> source code for more details.
 
 =back
 
