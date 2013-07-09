@@ -1,0 +1,25 @@
+-*- org -*-
+
+This is the 'NEWS' file for the 'screen-wrappers' project. This file contains
+information on changes since the last release of the package, as well as a
+running list of changes from previous versions.  If critical bugs are found in
+any of the software, notice of such bugs and the versions in which they were
+fixed will be noted here, as well.
+
+------------------------------------------------------------------------------
+
+* screen-wrappers 0.1.0 (2013-??-??)
+
+This is the initial release of 'screen-wrappers'.
+
+The 'screen-wrappers' project provides convenience wrappers for various
+invocations of the GNU screen(1) program.
+
+    http://www.gnu.org/software/screen/
+
+This initial release provides only the 'screen-ls' program. Once installed,
+you can read screen-ls(1) to learn all about it.
+
+See the README file for more information.
+
+------------------------------------------------------------------------------

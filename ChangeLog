@@ -1,0 +1,22 @@
+2013-07-08  Alan D. Salewski  <salewski@att.net>
+
+	* bootstrap: new file
+
+	* src/main/bash/bin/screen-ls.in: new file
+	* src/main/bash/bin/Makefile.am: new file
+	* src/main/bash/Makefile.am: new file
+	* src/main/Makefile.am: new file
+	* src/Makefile.am: new file
+	* Makefile.am: new file
+
+	* autotools/install-sh: new file
+	* autotools/missing: new file
+
+	* README: new file
+	* NEWS: new file
+	* INSTALL: new file
+	* HACKING: new file
+	* AUTHORS: new file
+	* BUGS: new file
+	* COPYING: new file
+	* ChangeLog: new file

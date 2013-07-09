@@ -1,0 +1,611 @@
+#! @BASH_SH@ -
+# @configure_input@
+#
+# Copyright (C) 2013 Alan D. Salewski <salewski@att.net>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+# screen-ls: Pretty-prints the output from 'screen -ls' (actually, 'screen -q
+# -ls') on stdout. Prints the session names (without the leading pid and '.'
+# char) from the output of the 'screen -ls' command. With the '-l' ('--long')
+# option, will print the full output in a readable table. With the '-p'
+# ('--show-pid') option, will include the pid and '.' char which are
+# suppressed by default.
+#
+# Any options not recognized by 'screen-ls' will be passed through to
+# 'screen'. You can explicitly stop 'screen-ls' options processing by using
+# the '--' psueo-option; all options after that will be passed through to
+# 'screen'.
+#
+# See screen-ls(1) for the full story (or run the 'perldoc' program on this
+# file).
+#
+# Exit status will be zero upon success, non-zero upon error (invalid
+# arguments provided to this program, for example).
+
+declare -r PROG='screen-ls'
+
+declare -r COPYRIGHT_DATES='2013'
+
+declare -r gl_maintainer_addr='@DFLT_MAINTAINER@'  # filtered in at build time
+
+# This variable is replaced by the current screen-wrappers project version
+# number at build time.
+declare -r SCREEN_WRAPPERS_VERSION='@VERSION@'
+
+# This variable is replaced at build time
+declare -r gl_const_build_date='@BUILD_DATE@'
+declare -r gl_const_release="${SCREEN_WRAPPERS_VERSION}  (built: ${gl_const_build_date})"
+
+
+declare -r PROG_SCREEN='@SCREEN@'  # GNU 'screen' command found at configure time
+
+declare -r PROG_COLUMN='@COLUMN@'  # BSD 'column' command found at configure time
+
+# mode flags
+declare gl_be_verbose=false       # Boolean. See -v switch.
+
+declare opt_show_long=false       # Dflt; override via the -l switch
+declare opt_show_pid=false        # Dflt; override via the -p switch
+
+
+declare -a F_CLEANUP_HOOK_NAMES=()
+
+function f_add_cleanup_hook_name () {
+    F_CLEANUP_HOOK_NAMES+=( $1 );
+}
+
+
+function f_cleanup () {
+
+    if test ${#F_CLEANUP_HOOK_NAMES[@]} -eq 0; then
+        # No cleanup hooks, so nothing to do
+        return
+    fi
+
+    local cleanup_hook
+    local idx
+
+    let idx=${#F_CLEANUP_HOOK_NAMES[@]}-1
+
+    # Note that we're running the cleanup hooks in opposite order from which
+    # they were installed.
+    #
+    while test $idx -ge 0; do
+
+        cleanup_hook=${F_CLEANUP_HOOK_NAMES[$idx]}
+
+        if $gl_be_verbose; then
+            printf "${PROG} (info): running cleanup hook: [%s]\n" "${cleanup_hook}" 1>&2
+        fi
+
+        test -n "$cleanup_hook" && eval "$cleanup_hook"
+
+        let idx=$idx-1
+    done
+}
+
+function f_cleanup_and_die () {
+    f_cleanup
+    exit 1
+}
+
+trap 'printf "$PROG (warn): HUP signal caught; bailing out\n"  1>&2; f_cleanup_and_die' HUP
+trap 'printf "$PROG (warn): INT signal caught; bailing out\n"  1>&2; f_cleanup_and_die' INT
+trap 'printf "$PROG (warn): QUIT signal caught; bailing out\n" 1>&2; f_cleanup_and_die' QUIT
+trap 'printf "$PROG (warn): TERM signal caught; bailing out\n" 1>&2; f_cleanup_and_die' TERM
+
+trap 'f_cleanup' EXIT
+
+
+# This is a list of command line arguments that we'll "pass through" to the
+# screen(1) program. Note that if a screen-ls option name clashes with a
+# screen(1) opt, the user can specify '--' in front of the options intended
+# for screen-ls(1) and we'll pass those through (because we stop processing
+# option once we encounter '--')
+declare -a ARGS_FOR_SCREEN=()
+
+
+f_print_help () {
+
+    cat <<EOF
+usage: $PROG [OPTION...]
+Pretty-prints the output from 'screen -ls' on stdout.
+
+  -h, --help      Print this help message on stdout
+  -l, --long      Use long listing format
+  -p, --show-pid  Shows the '<pid>.' prefix in screen(1) session names
+  -V, --version   Print the version of the program on stdout
+  -v, --verbose   Tell what is being done. Two or more -v options turns on tracing (set -x)
+
+      --          Signals the end of options and disables further options processing. All
+                    remaining arguments will be passed through to screen(1)
+
+Any provided options that are not recognized by $PROG (that is, any
+options that are not in the above list) will be passed through to screen(1).
+
+Report bugs to ${gl_maintainer_addr}
+EOF
+}
+
+f_print_version () {
+    cat <<EOF
+${PROG} ${gl_const_release}
+
+Copyright (C) ${COPYRIGHT_DATES} Alan D. Salewski <salewski@att.net>
+License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Alan D. Salewski.
+EOF
+}
+
+
+while test $# -gt 0 ; do
+
+    option=$(expr "x$1" : 'x\(--[^=]*\)' \| \
+                  "x$1" : 'x\(-.\)'      \| \
+                  "x$1" : 'x\(.*\)')
+
+    optarg=$(expr "x$1" : 'x--[^=]*=\(.*\)' \| \
+                  "x$1" : 'x-.\(.*\)')
+
+    case $1 in
+
+        --help | -h )
+            # print help message
+            f_print_help
+            exit 0
+            ;;
+
+
+        --long | -l )
+            opt_show_long=true
+            shift
+            ;;
+
+
+        --show-pid | -p )
+            opt_show_pid=true
+            shift
+            ;;
+
+
+        --version | -V )
+            # print program version info
+            f_print_version
+            exit 0
+            ;;
+
+        --verbose | -v )
+            # Accumulating 'verbose' opt. A single -v opt simply turns
+            # $gl_be_verbose on; two or more '-v' opts turns tracing on. Note
+            # that if you intend to turn tracing on, you'll probably want your
+            # -v opts to be the first opts on the command line (so they take
+            # effect earlier).
+            if $gl_be_verbose; then
+                # We've seen at least one -v opt before, so now we're turning tracing on
+                set -x
+            else
+                # First -v opt we're seeing
+                gl_be_verbose=true
+            fi
+            shift
+            ;;
+
+        -- ) # Stop option processing
+            shift
+            while test $# -gt 0; do
+                ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]=$1
+                shift
+            done
+            break
+            ;;
+
+        --* | -* )
+            # Unrecognized option; we'll pass it through to screen(1)
+            ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]=$1
+            shift
+            ;;
+
+        * )
+            # Unrecognized non-option; we'll pass it through to screen(1)
+            ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]=$1
+            shift
+            ;;
+    esac
+done
+
+chop_pid_command='sed -e ''s/^[[:space:]]*[[:digit:]]\{1,\}[.]//'
+
+if $opt_show_pid; then
+    chop_pid_command='cat -'  #  effectively a NOOP (yes, arguably a UUoC)    
+fi
+
+
+if $opt_show_long; then
+    sed_or_column_command="${PROG_COLUMN}"' -t'
+fi
+
+
+if $opt_show_long; then
+
+    # This regex captures the three fields of interest, for reuse on the left side
+    # of our sed 's' commands below.
+    re_sed_l_chunks='^[[:space:]]*\(.\{1,\}\)[[:space:]]\{1,\}\([(][^)]\{1,\}[)]\)[[:space:]]\{1,\}\([(][^)]\{1,\}[)]\)[[:space:]]*$'
+
+    "${PROG_SCREEN}" -q -ls "${ARGS_FOR_SCREEN[@]}" \
+    | tail -n +2 \
+    | head -n -2 \
+    | $chop_pid_command \
+    | while read line; do
+          #        
+          # Recall that 0x1f is the ASCII "unit separator" character; used
+          # here because it is exceedingly unlikely to appear in the output of
+          # 'screen -ls'. That is the hope, at least...
+          #
+          # From ascii(7):
+          #     Oct   Dec   Hex   Char
+          #     ──────────────────────────────────────
+          #     ...
+          #     034   28    1C    FS  (file separator)
+          #     035   29    1D    GS  (group separator)
+          #     036   30    1E    RS  (record separator)
+          #     037   31    1F    US  (unit separator)
+          #     ...
+          #
+          # The rationale is that screen(1) session names may contain spaces
+          # in them, so we need to doctor-up the input to column(1) to allow
+          # it to definitively distinguish which values belong in which
+          # column.
+          #
+          t_session_name="$( echo "${line}" | sed -e 's#'${re_sed_l_chunks}'#\1#')"  # may contain spaces
+          t_session_date="$( echo "${line}" | sed -e 's#'${re_sed_l_chunks}'#\2#')"
+          t_session_state="$(echo "${line}" | sed -e 's#'${re_sed_l_chunks}'#\3#')"  # '(Attached)', '(Detached)', ...
+          printf '%s%s%s%s%s%s\n' \
+              "${t_session_name}"  $'\x1f' \
+              "${t_session_date}"  $'\x1f' \
+              "${t_session_state}" $'\x1f'
+      done \
+    | "${PROG_COLUMN}" -s $'\x1f' -t
+
+    # Note that we can't use bash's 'pipefail' option because 'screen -ls' (at
+    # least as of the 4.01.00devel version shipped with Debian) exits with
+    # non-zero status upon success. We use the '-q' option to force some
+    # sanity onto this scenario (see screen(1)); there's an open (as of
+    # 2013-07-08) issue for this filed in the upstream issue tracker for this
+    # behavior:
+    #
+    #     http://savannah.gnu.org/bugs/?26750
+    #
+    # It's been open since 2009, though, so maybe isn't easy to fix...
+    #
+    # In any event, we'll need to check the exit status of each command in the
+    # pipeline individually using the PIPESTATUS array.
+
+    declare -a t_estat_arr=( ${PIPESTATUS[@]} )
+
+    test ${t_estat_arr[0]} -lt 9 &&  # screen
+    test ${t_estat_arr[1]} -eq 0 &&  # tail
+    test ${t_estat_arr[2]} -eq 0 &&  # head
+    test ${t_estat_arr[3]} -eq 0 &&  # $chop_pid_command
+    test ${t_estat_arr[4]} -eq 0 &&  # while loop
+    test ${t_estat_arr[5]} -eq 0 ||  # ${PROG_COLUMN}
+    {
+        printf "${PROG} (error): was error while processing output of 'screen -q -ls' command; PIPESTATUS: %s %s %s %s %s; bailing out\n" "${t_estat_arr[@]}" 1>&2
+        exit 1
+    }
+
+else
+
+    # Note that our sed regex below keeps all tokens of the session name (it
+    # may contain spaces; see notes above) by definitively matching the date
+    # and session state tokens at the end of each line of 'screen -ls' output,
+    # and then keeping everything that appears in front of them.
+
+    "${PROG_SCREEN}" -q -ls "${ARGS_FOR_SCREEN[@]}" \
+    | tail -n +2 \
+    | head -n -2 \
+    | $chop_pid_command \
+    | sed -n -e 's#^[[:space:]]*\(.\{1,\}\)\([[:space:]]\{1,\}[(][^)]\{1,\}[)]\)\{2\}[[:space:]]*$#\1#p'
+
+    # See notes above on why we can't use bash's 'pipefail' option, and effect
+    # of screen's '-q' option, etc.
+
+    declare -a t_estat_arr=( ${PIPESTATUS[@]} )
+
+    test ${t_estat_arr[0]} -lt 9 &&  # screen
+    test ${t_estat_arr[1]} -eq 0 &&  # tail
+    test ${t_estat_arr[2]} -eq 0 &&  # head
+    test ${t_estat_arr[3]} -eq 0 &&  # $chop_pid_command
+    test ${t_estat_arr[4]} -eq 0 ||  # sed
+    {
+        printf "${PROG} (error): was error while processing output of 'screen -q -ls' command; PIPESTATUS: %s %s %s %s %s; bailing out\n" "${t_estat_arr[@]}" 1>&2
+        exit 1
+    }
+
+fi
+
+exit 0
+
+
+# ----------------------------------------------------------------------------
+# Documentation
+#
+# The docs are in Perl's POD format, so you can run either the 'perldoc' or
+# 'pod2man' programs on this file to produce a man page.
+#
+# To generate a man page for distribution (in a tarball, DEB, or RPM, for
+# instance), you'll probably want to run pod2man something like this:
+#
+#     $ pod2man /path/to/this/file \
+#               --center='screen-ls' \
+#               --release='screen-wrappers-0.1.0' \
+#               --section='1' \
+#               > /outputdir/screen-ls.1
+#
+# To inspect the page formatting, etc., you can pipe the above 'pod2man'
+# command to:
+#     'man -l -'
+# instead of redirecting the output to a file.
+#
+# ----------------------------------------------------------------------------
+
+=pod
+
+=head1 NAME
+
+  screen-ls - pretty-prints the output from 'screen -ls'
+
+
+=head1 SYNOPSIS
+
+  screen-ls -h
+  screen-ls -V
+  screen-ls [OPTION...] [--] [SCREEN_OPTIONS]
+
+
+=head1 DESCRIPTION
+
+The C<screen-ls> program invokes the GNU L<screen(1)> program with the C<-ls>
+option to obtain a list of screen session names, and pretty prints the
+output. See L</"EXAMPLES"> below.
+
+By default, prints the L<screen(1)> session names (without the leading pid and
+C<.> char) from the output of the C<screen -ls> command.
+
+With the C<-l> (C<--long>) option, will print the full output in a readable
+table.
+
+With the C<-p> (C<--show-pid>) option, will include the pid and <.> char which
+are suppressed by default.
+
+Any options not recognized by C<screen-ls> will be passed through to
+L<screen(1)>. You can explicitly stop C<screen-ls> options processing by using
+the C<--> pseudo-option; all options after that will be passed through to
+L<screen(1)>.
+
+
+=head2 Motivation
+
+When working with GNU L<screen(1)>, it is not uncommon to accumulate a large
+number of L<screen(1)> sessions. This naturally leads to the need to locate
+"interesting" sessions at a later time when you wish to reconnect to them.
+And that, of course, becomes more difficult as the number of L<screen(1)>
+sessions increases.
+
+Pretty-printing the output makes it easier to read by inspection, and
+suppressing everything except the L<screen(1)> session names from the output
+often simplifies downstream processing in a Unix pipeline.
+
+
+=head1 OPTIONS
+
+Below are the command line options recognized by C<screen-ls>. Any options not
+recognized by C<screen-ls> will be passed through to the L<screen(1)>
+subprocess.
+
+You can explicitly stop C<screen-ls> options processing by using the C<-->
+pseudo-option; all options after that will be passed through to L<screen(1)>.
+
+
+=over 4
+
+=item -h, --help
+
+Print help usage message
+
+
+=item -l, --long
+
+Use a long listing format.
+
+
+=item -p, --show-pid
+
+Causes C<screen-ls> to display the '<pid>.' prefix in screen session names. By
+default, C<screen-ls> suppresses the output of this prefix.
+
+
+=item -V, --version
+
+Print the version of the program to stdout and then exit.
+
+
+=item -v, --verbose
+
+Turn on verbose mode. Two or more -v options turns on tracing (invokes C<set
+-x>; this is primarily intended for developers).
+
+
+=back
+
+
+=head1 EXAMPLES
+
+
+For reference, the default output of C<screen -ls> might look like this:
+
+    $ screen -ls
+    There are screens on:
+        779.screen-wrappers-dev (07/08/2013 01:09:19 PM)        (Attached)
+        26043.datomic-local     (07/07/2013 02:20:50 PM)        (Attached)
+        14926.emacs-dev (06/30/2013 07:57:14 PM)        (Attached)
+        24078.activemq-mysql-prod       (06/23/2013 01:22:41 AM)        (Detached)
+        23644.pts-98.ig88       (05/29/2013 01:04:21 PM)        (Detached)
+        803.build-build (05/22/2013 06:02:49 AM)        (Detached)
+        12522.release-5.5       (05/18/2013 06:09:31 AM)        (Attached)
+        5200.mutt      (05/17/2013 10:21:59 AM)        (Attached)
+    ...
+    49 Sockets in /var/run/screen/S-ads.
+
+That output is truncated, but you get the idea. When there are only two or
+three L<screen(1)> session active, the above output works fine. However, when
+there are a large number of L<screen(1)> sessions active (such as in above
+example, where there are 49), it can become difficult to find the interesting
+ones. Enter C<screen-ls>.
+
+By default, C<screen-ls> strips away all data except the L<screen(1)> session
+name, and it removes the pid and following C<.> character from those, as
+well. Here is how the above output appears when generated by C<screen-ls>:
+
+    $ screen-ls
+    screen-wrappers-dev
+    datomic-local
+    emacs-dev
+    activemq-mysql-prod
+    pts-98.ig88
+    build-build
+    release-5.5
+    mutt
+    ...
+
+That is both easier to read, and easier to process by downstream tools in a
+pipeline. For example:
+
+    $ screen-ls | sort
+    activemq-mysql-prod
+    build-build
+    datomic-local
+    emacs-dev
+    mutt
+    pts-98.ig88
+    release-5.5
+    screen-wrappers-dev
+    ...
+
+
+If you have duplicate session names, in order to reconnect to a particular
+L<screen(1)> session you will need to specify the C<pid> prefix for the
+session name that C<screen-ls> suppresses by default. You can prevent
+C<screen-ls> from suppressing this behavior by specifying the C<-p>
+(C<--show-pid>) option:
+
+    $ screen-ls -p
+    779.screen-wrappers-dev
+    713.screen-wrappers-dev
+    26043.datomic-local
+    14926.emacs-dev
+    24078.activemq-mysql-prod
+    23644.pts-98.ig88
+    803.build-build
+    12522.release-5.5
+    5200.mutt
+    ...
+
+    $ screen -d -r 713.screen-wrappers-dev
+
+
+When invoked with the C<-l> (C<--long>) option, C<screen-ls> will print the
+C<screen ls> output in a readable table:
+
+    $ screen-ls -l
+    screen-wrappers-dev  (07/08/2013  01:09:19  PM)  (Attached)
+    datomic-local        (07/07/2013  02:20:50  PM)  (Attached)
+    emacs-dev            (06/30/2013  07:57:14  PM)  (Attached)
+    activemq-mysql-prod  (06/23/2013  01:22:41  AM)  (Detached)
+    pts-98.ig88          (05/29/2013  01:04:21  PM)  (Detached)
+    build-build          (05/22/2013  06:02:49  AM)  (Detached)
+    release-5.5          (05/18/2013  06:09:31  AM)  (Attached)
+    mutt                 (05/17/2013  10:21:59  AM)  (Attached)
+    ...
+
+
+Of course, to see the C<pid> prefixes on the session names, you would need to
+add the C<-p> option to that:
+
+    $ screen-ls -l -p
+    779.screen-wrappers-dev    (07/08/2013  01:09:19  PM)  (Attached)
+    26043.datomic-local        (07/07/2013  02:20:50  PM)  (Attached)
+    14926.emacs-dev            (06/30/2013  07:57:14  PM)  (Attached)
+    24078.activemq-mysql-prod  (06/23/2013  01:22:41  AM)  (Detached)
+    23644.pts-98.ig88          (05/29/2013  01:04:21  PM)  (Detached)
+    803.build-build            (05/22/2013  06:02:49  AM)  (Detached)
+    12522.release-5.5          (05/18/2013  06:09:31  AM)  (Attached)
+    5200.mutt                  (05/17/2013  10:21:59  AM)  (Attached)
+    ...
+
+
+=head1 DIAGNOSTICS
+
+Exits with 0 (zero) status on success, nonzero on error.
+
+
+=head1 BUGS
+
+=over
+
+=item *
+
+Internally invokes C<screen -ls -q>, not just C<screen -ls> as advertized
+above; this is needed to allow for error checking because C<screen -ls> exits
+with a nonzero status on success. See comments in C<screen-ls> source code for
+more details.
+
+=back
+
+If you find any others, please send a bug report to the author. See
+L</"AUTHOR">
+
+
+=head1 AUTHOR
+
+Written by Alan D. Salewski <salewski@att.net>.
+
+
+=cut
+
+# Copyright symbol gets munged by pod2man(1), so we'll fall back on using '(C)'
+# Copyright © 2013 Alan D. Salewski <salewski@att.net>
+
+=pod 
+
+=head1 COPYRIGHT
+
+Copyright (C) 2013 Alan D. Salewski <salewski@att.net>
+
+License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+=cut
+
+
+# Local Variables:
+#     mode: sh
+#     eval: (sh-set-shell "bash" t nil)
+# End:

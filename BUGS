@@ -1,0 +1,37 @@
+This is the 'BUGS' file for the 'screen-wrappers' project.
+
+Please send all bug reports to Alan D. Salewski <salewski@att.net>
+
+Note that some of the programs, modules, or whatever in the 'screen-wrappers'
+project, (when run with a '-h' or '--help' switch, for instance, or when
+viewing their documentation), may indicate that bug reports should be sent to
+a particular email address. Where that email address differs from the one
+above, you may be better off sending the bug to the address recommended by the
+program; however, in such a case, the guidelines below may still be of
+interest as they indicate the type of information that is helpful to the
+developer.
+
+When reporting a bug, please include as much information as possible,
+including (but not limited to):
+
+    * host operating system (and version)
+
+    * version of 'screen-wrappers' project you are using
+
+    * name of the program, file, or whatever that contains the bug
+
+    * what the observed behavior was
+
+    * what the expected behavior was
+
+    * any specific steps that need to be performed in sequence in order
+      to produce the bug
+
+    * file(s) of the input that causes the buggy behavior
+
+    * file(s) of any broken output
+
+In short, include anything that will help us to reproduce the bug, as this
+will /greatly increase/ the likelyhood of the bug getting fixed and will
+/greatly decrease/ the amount of time before we can make a new release with
+the bug fix.
