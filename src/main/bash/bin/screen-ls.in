@@ -530,14 +530,14 @@ When invoked with the C<-l> (C<--long>) option, C<screen-ls> will print the
 C<screen ls> output in a readable table:
 
     $ screen-ls -l
-    screen-wrappers-dev  (07/08/2013  01:09:19  PM)  (Attached)
-    datomic-local        (07/07/2013  02:20:50  PM)  (Attached)
-    emacs-dev            (06/30/2013  07:57:14  PM)  (Attached)
-    activemq-mysql-prod  (06/23/2013  01:22:41  AM)  (Detached)
-    pts-98.ig88          (05/29/2013  01:04:21  PM)  (Detached)
-    build-build          (05/22/2013  06:02:49  AM)  (Detached)
-    release-5.5          (05/18/2013  06:09:31  AM)  (Attached)
-    mutt                 (05/17/2013  10:21:59  AM)  (Attached)
+    screen-wrappers-dev  (07/08/2013 01:09:19 PM)  (Attached)
+    datomic-local        (07/07/2013 02:20:50 PM)  (Attached)
+    emacs-dev            (06/30/2013 07:57:14 PM)  (Attached)
+    activemq-mysql-prod  (06/23/2013 01:22:41 AM)  (Detached)
+    pts-98.ig88          (05/29/2013 01:04:21 PM)  (Detached)
+    build-build          (05/22/2013 06:02:49 AM)  (Detached)
+    release-5.5          (05/18/2013 06:09:31 AM)  (Attached)
+    mutt                 (05/17/2013 10:21:59 AM)  (Attached)
     ...
 
 
@@ -545,14 +545,14 @@ Of course, to see the C<pid> prefixes on the session names, you would need to
 add the C<-p> option to that:
 
     $ screen-ls -l -p
-    779.screen-wrappers-dev    (07/08/2013  01:09:19  PM)  (Attached)
-    26043.datomic-local        (07/07/2013  02:20:50  PM)  (Attached)
-    14926.emacs-dev            (06/30/2013  07:57:14  PM)  (Attached)
-    24078.activemq-mysql-prod  (06/23/2013  01:22:41  AM)  (Detached)
-    23644.pts-98.ig88          (05/29/2013  01:04:21  PM)  (Detached)
-    803.build-build            (05/22/2013  06:02:49  AM)  (Detached)
-    12522.release-5.5          (05/18/2013  06:09:31  AM)  (Attached)
-    5200.mutt                  (05/17/2013  10:21:59  AM)  (Attached)
+    779.screen-wrappers-dev    (07/08/2013 01:09:19 PM)  (Attached)
+    26043.datomic-local        (07/07/2013 02:20:50 PM)  (Attached)
+    14926.emacs-dev            (06/30/2013 07:57:14 PM)  (Attached)
+    24078.activemq-mysql-prod  (06/23/2013 01:22:41 AM)  (Detached)
+    23644.pts-98.ig88          (05/29/2013 01:04:21 PM)  (Detached)
+    803.build-build            (05/22/2013 06:02:49 AM)  (Detached)
+    12522.release-5.5          (05/18/2013 06:09:31 AM)  (Attached)
+    5200.mutt                  (05/17/2013 10:21:59 AM)  (Attached)
     ...
 
 
