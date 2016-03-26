@@ -7,7 +7,7 @@ Basic Installation
 project. The generic configuration and installation instructions follow
 immediately; these should already be familar to people who are familiar with
 using the GNU autotools ('./configure' and friends...). There are currently
-(as of 2013-07-08) no non-standard configuration options specific to the
+(as of 2016-03-25) no non-standard configuration options specific to the
 screen-wrappers project.
 
    The `configure' shell script attempts to guess correct values for

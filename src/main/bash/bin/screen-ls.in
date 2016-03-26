@@ -1,7 +1,7 @@
 #! @BASH_SH@ -
 # @configure_input@
 #
-# Copyright (C) 2013 Alan D. Salewski <salewski@att.net>
+# Copyright (C) 2013, 2016 Alan D. Salewski <salewski@att.net>
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@
 
 declare -r PROG='screen-ls'
 
-declare -r COPYRIGHT_DATES='2013'
+declare -r COPYRIGHT_DATES='2013, 2016'
 
 declare -r gl_maintainer_addr='@DFLT_MAINTAINER@'  # filtered in at build time
 
@@ -671,13 +671,13 @@ Written by Alan D. Salewski <salewski@att.net>.
 =cut
 
 # Copyright symbol gets munged by pod2man(1), so we'll fall back on using '(C)'
-# Copyright © 2013 Alan D. Salewski <salewski@att.net>
+# Copyright © 2013, 2016 Alan D. Salewski <salewski@att.net>
 
 =pod 
 
 =head1 COPYLEFT
 
-Copyright (C) 2013 Alan D. Salewski <salewski@att.net>
+Copyright (C) 2013, 2016 Alan D. Salewski <salewski@att.net>
 
 License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.

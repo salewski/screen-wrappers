@@ -10,7 +10,7 @@ file for how to report problems).
 
 All developers working on the 'screen-wrappers' project need to be using the
 same versions of the Autotools programs in the toolchain. Currently (as of
-2013-07), those versions are:
+2016-03), those versions are:
 
     automake 1.11.6
     autoconf 2.69

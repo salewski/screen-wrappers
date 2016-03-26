@@ -1,7 +1,21 @@
+2016-03-25  Alan D. Salewski  <asalewski@rdc.com>
+
+	* src/main/bash/bin/screen-ls.in
+	- introduce '-U' (--unsorted) option (thanks to John Marquart for the suggestion)
+	- update copyright statement dates
+
+	* configure.ac: set version to 0.2.0-snapshot to reflect next target version
+
+	* INSTALL: ditto
+	* HACKING: update time-of-writing date
+	* NEWS: noted above changes
+
 2013-07-09  Alan D. Salewski  <salewski@att.net>
 
 	* src/main/bash/bin/screen-ls.in: doc fixes
 	* NEWS: noted above change
+
+	* src/main/bash/bin/screen-ls.in: update copyright statements dates
 
 	* configure.ac: set version to 0.1.2-snapshot for next dev cycle
 	* NEWS: created empty news section for future 0.1.2 release
