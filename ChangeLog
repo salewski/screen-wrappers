@@ -1,5 +1,7 @@
 2016-03-25  Alan D. Salewski  <asalewski@rdc.com>
 
+	* configure: regenerate
+
 	* src/main/bash/bin/screen-ls.in
 	- introduce '-U' (--unsorted) option (thanks to John Marquart for the suggestion)
 	- update copyright statement dates
