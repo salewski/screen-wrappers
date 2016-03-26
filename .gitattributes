@@ -1,0 +1,11 @@
+# -*- conf-unix -*-
+#
+# GitHub uses the 'linguist' library to compute statistics for the languages
+# in the files a project. To allow authors to override the default effect, it
+# honors the following attributes: linguist-documentation, linguist-language,
+# and linguist-vendored. Documentation and "vendored" files do not contribute
+# to the language statistics for a repo.
+#
+# See also:  https://github.com/github/linguist#troubleshooting
+#
+**/Makefile.in linguist-vendored

@@ -1,4 +1,8 @@
-2016-03-25  Alan D. Salewski  <asalewski@rdc.com>
+2016-03-26  Alan D. Salewski  <salewski@att.net>
+
+	* .gitattributes: new file
+
+2016-03-25  Alan D. Salewski  <salewski@att.net>
 
 	RELEASED screen-wrappers 0.2.0
 
