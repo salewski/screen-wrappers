@@ -14,8 +14,26 @@ fixed will be noted here, as well.
 
 ** fixes
 
-   (none)
+*** screen-ls: address github bug #1: work correctly with GNU screen 4.3.0 or newer
 
+    https://github.com/salewski/screen-wrappers/issues/1
+
+    Upstream GNU screen versions prior to 4.3.0 exited with a non-zero exit
+    status of 1 (rather than the expected zero status) when invoked with the
+    'screen -ls' option, as is done by the 'screen-ls' program:
+
+    http://savannah.gnu.org/bugs/?26750
+
+    Earlier versions of 'screen-ls' had a comment in the source code noting
+    the wonkiness, and broke with GNU screen 4.3.0 when the upstream bug
+    #26750 was addressed (2015-06-12).
+
+    The 'screen-ls' program now attempts to parse the output of 'screen
+    --version' at runtime and adapt its behavior accordingly. If it detects a
+    version of GNU screen older than 4.3.0, then the traditional 'screen-ls'
+    behavior is used. If a version of screen newer than 4.3.0 is detected,
+    then the behavior is modified to expect a zero exit status to indicate a
+    successful outcome from the 'screen -ls' invocation.
 
 ** improvements
 

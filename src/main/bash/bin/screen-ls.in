@@ -156,6 +156,86 @@ EOF
 }
 
 
+f_is_screen_4_dot_3_or_newer () {
+
+    local __t_required_count=1
+    local __t_minimal_count=1
+    local __t_maximal_count=1
+
+    if test $# -lt ${__t_required_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; (at least) %d required; bailing out\n" \
+            $# ${__t_minimal_count} 1>&2
+        exit 1
+    fi
+
+    if test $# -gt ${__t_maximal_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; (at most) %d expected; bailing out\n" \
+            $# ${__t_maximal_count} 1>&2
+        exit 1
+    fi
+
+    local __t_fpath_prog_screen
+    local __t_screen_version_number_snippet
+
+    __t_fpath_prog_screen=$1
+
+
+    # Examples of how GNU screen advertizes its version:
+    #
+    #     Screen version 4.00.03jw4 (FAU) 2-May-06
+    #     Screen version 4.03.01 (GNU) 28-Jun-15
+
+    # XXX: This could fail on some mutant compilation of GNU screen
+    #
+    __t_screen_version_number_snippet=$( "${__t_fpath_prog_screen}" --version \
+                                         | head -n 1 \
+                                         | sed -n -e 's#^[^[:digit:].]\{1,\}\([[:digit:]]\{1,\}[.][[:digit:]]\{1,\}[.][[:digit:]]\{1,\}\).*#\1#p' )
+
+    if test $? -ne 0; then
+        return 1  # error
+    fi
+
+    local __t_local_major
+    local __t_local_minor
+
+    # Digits through the first dot are the major version number
+    #
+    __t_local_major=$(echo "${__t_screen_version_number_snippet}" | sed -n -e 's#^\([^.]\{1,\}\)[.].*#\1#p')
+
+    if test -z "${__t_local_major}"; then
+        printf "${PROG} (warning): was unable to determine the major version number of screen\n" 1>&2
+        return 1  # false
+    fi
+
+    # Digits between the first and second dot are the minor version number
+    #
+    __t_local_minor=$(echo "${__t_screen_version_number_snippet}" | sed -n -e 's#^[^.]\{1,\}[.]\([[:digit:]]\{1,\}\)[.].*#\1#p')
+
+    if test -z "${__t_local_minor}"; then
+        printf "${PROG} (warning): was unable to determine the minor version number of screen\n" 1>&2
+        return 1  # false
+    fi
+
+    # The MAJOR.MINOR.REVISION numbers reported by 'screen --version'
+    # typically contain leading zeros which would cause the decimal numbers to
+    # be interpretted as octal numbers. We'll slice off the leading zeroes to
+    # avoid that.
+    __t_local_major=$(echo "${__t_local_major}" | sed -e 's#^0\{1,\}##')
+    __t_local_minor=$(echo "${__t_local_minor}" | sed -e 's#^0\{1,\}##')
+
+    # Note that there's a third 'revision' component to the advertized GNU
+    # screen version number that we're ignoring here. We'll return a success
+    # status for any version greater than or equal to 4.3.0.
+
+    if test ${__t_local_major} -ge 4 \
+    && test ${__t_local_minor} -ge 3; then
+        return 0  # success (true)
+    fi
+
+    return 1  # fail test (false)
+}
+
+
 while test $# -gt 0 ; do
 
     option=$(expr "x$1" : 'x\(--[^=]*\)' \| \
@@ -277,6 +357,29 @@ if $opt_show_sorted; then
     fi
 fi
 
+# The 'screen' program prior to version 4.0.3 (from 2015-06-12, advertized as
+# '4.03.00' by 'screen --version') has a bug that causes the 'screen -ls'
+# command to exit with status 1 upon success.
+#
+# For info on the upstream bug see:
+#
+#     http://savannah.gnu.org/bugs/?26750
+#
+# We want to work with either version, though, so we'll dynamically test the
+# major.minor version numbers and adjust our behavior accordingly.
+#
+have_screen_4_dot_3_or_newer=$(f_is_screen_4_dot_3_or_newer "${PROG_SCREEN}")
+if test $? -ne 0; then
+    printf "${PROG} (error): was unable to obtain the version of the available GNU screen program: \"%s\"; bailing out\n" \
+           "${PROG_SCREEN}" 1>&2
+    exit 1
+fi
+
+if $have_screen_4_dot_3_or_newer; then
+    SCREEN_LS_ESTAT=0
+else
+    SCREEN_LS_ESTAT=1
+fi
 
 if $opt_show_long; then
 
@@ -334,7 +437,8 @@ if $opt_show_long; then
 
     declare -a t_estat_arr=( ${PIPESTATUS[@]} )
 
-    test ${t_estat_arr[0]} -eq 1 &&  # screen   XXX: does 1 always mean success here?
+    test ${t_estat_arr[0]} -eq ${SCREEN_LS_ESTAT} &&  # screen prior to 4.3.0 emits 1; later versions emit 0 (as expected). We'll work with either.
+
     test ${t_estat_arr[1]} -eq 0 &&  # tail
     test ${t_estat_arr[2]} -eq 0 &&  # head
     test ${t_estat_arr[3]} -eq 0 &&  # $chop_pid_command
@@ -363,7 +467,8 @@ else
 
     declare -a t_estat_arr=( ${PIPESTATUS[@]} )
 
-    test ${t_estat_arr[0]} -eq 1 &&  # screen   XXX: does 1 always mean success here?
+    test ${t_estat_arr[0]} -eq ${SCREEN_LS_ESTAT} &&  # screen prior to 4.3.0 emits 1; later versions emit 0 (as expected). We'll work with either.
+
     test ${t_estat_arr[1]} -eq 0 &&  # tail
     test ${t_estat_arr[2]} -eq 0 &&  # head
     test ${t_estat_arr[3]} -eq 0 &&  # $chop_pid_command

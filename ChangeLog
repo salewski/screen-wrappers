@@ -1,3 +1,12 @@
+2016-04-10  Alan D. Salewski  <salewski@att.net>
+
+	* src/main/bash/bin/screen-ls.in: dynamically adapt screen subproc
+	exit status handling to account for upstream bug #26750. GNU
+	screen prior to 4.3.0 exists with status 1 when invoked with '-ls'
+	option; later versions exit with stat 0 (as expected); we'll work
+	with either.
+	* NEWS: noted above changes
+
 2016-03-26  Alan D. Salewski  <salewski@att.net>
 
 	* .gitattributes: new file
