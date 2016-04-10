@@ -229,9 +229,10 @@ f_is_screen_4_dot_3_or_newer () {
     # The MAJOR.MINOR.REVISION numbers reported by 'screen --version'
     # typically contain leading zeros which would cause the decimal numbers to
     # be interpretted as octal numbers. We'll slice off the leading zeroes to
-    # avoid that.
-    __t_local_major=$(echo "${__t_local_major}" | sed -e 's#^0\{1,\}##')
-    __t_local_minor=$(echo "${__t_local_minor}" | sed -e 's#^0\{1,\}##')
+    # avoid that by explicitly telling the shell that we want the base 10
+    # values.
+    __t_local_major=$((10#${__t_local_major}))
+    __t_local_minor=$((10#${__t_local_minor}))
 
     # Note that there's a third 'revision' component to the advertized GNU
     # screen version number that we're ignoring here. We'll return a success
