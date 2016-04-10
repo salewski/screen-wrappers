@@ -156,6 +156,16 @@ EOF
 }
 
 
+# Prints on stdout 'true' or 'false' to indicate whether or not the GNU screen
+# version being used is 4.3.0 or newer. The value can be captured by callers
+# and later used to invoke either the 'true' or 'false' commands.
+#
+# The return status of the function will be 0 upon success (regardless of
+# whether 'true' or 'false' was printed to stdout), and non-zero upon error.
+#
+# Callers must check the return status. A non-zero return status indicates an
+# unexpected processing error.
+
 f_is_screen_4_dot_3_or_newer () {
 
     local __t_required_count=1
@@ -229,10 +239,12 @@ f_is_screen_4_dot_3_or_newer () {
 
     if test ${__t_local_major} -ge 4 \
     && test ${__t_local_minor} -ge 3; then
-        return 0  # success (true)
+        printf 'true\n'
+        return 0  # success; found version of screen is 4.3.0 or newer
     fi
 
-    return 1  # fail test (false)
+    printf 'false\n'
+    return 0  # success; found version of screen is older than 4.3.0
 }
 
 
