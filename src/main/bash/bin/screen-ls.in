@@ -678,7 +678,7 @@ automatically. You can disable the sorting behavior by providing the C<-U>
     ...
 
 
-A example of common usage in a pipeline is to use C<screen-ls> to find a given
+An example of common usage in a pipeline is to use C<screen-ls> to find a given
 L<screen(1)> session, and then use the shell's command recall and command line
 editing facilities to feed that found L<screen(1)> session name to
 L<screen(1)> in order to reconnect to it. Using our running example, let's say

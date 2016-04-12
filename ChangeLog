@@ -1,5 +1,8 @@
 2016-04-12  Alan D. Salewski  <salewski@att.net>
 
+	* src/main/bash/bin/screen-ls.in: Doc fix ("A example..." => "An example...")
+	* NEWS: noted above change
+
 	* configure.ac: set version to 0.2.2-snapshot for next dev cycle
 	* NEWS: created empty news section for future 0.2.2 release
 
