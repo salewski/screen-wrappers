@@ -1,3 +1,8 @@
+2016-04-12  Alan D. Salewski  <salewski@att.net>
+
+	* configure.ac: set version to 0.2.2-snapshot for next dev cycle
+	* NEWS: created empty news section for future 0.2.2 release
+
 2016-04-10  Alan D. Salewski  <salewski@att.net>
 
 	RELEASED screen-wrappers 0.2.1
