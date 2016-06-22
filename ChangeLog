@@ -1,3 +1,9 @@
+2016-06-22  Alan D. Salewski  <salewski@att.net>
+
+	* src/main/bash/bin/screen-ls.in: use grep rather than head and
+	tail to obtain session names
+	* NEWS: noted above change
+
 2016-04-12  Alan D. Salewski  <salewski@att.net>
 
 	* src/main/bash/bin/screen-ls.in: Doc fix ("A example..." => "An example...")

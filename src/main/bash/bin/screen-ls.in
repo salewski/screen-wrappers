@@ -470,8 +470,7 @@ else
     # and then keeping everything that appears in front of them.
 
     "${PROG_SCREEN}" -ls "${ARGS_FOR_SCREEN[@]}" \
-    | tail -n +2 \
-    | head -n -2 \
+    | grep '^[[:space:]]\{1,\}[^[:space:]]'      \
     | $chop_pid_command \
     | sed -n -e 's#^[[:space:]]*\(.\{1,\}\)\([[:space:]]\{1,\}[(][^)]\{1,\}[)]\)\{2\}[[:space:]]*$#\1#p' \
     | $maybe_sort_command

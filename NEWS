@@ -16,6 +16,8 @@ fixed will be noted here, as well.
 
 *** screen-ls: minor documentation fix
 
+*** screen-ls: fix github issue #2: name of last session name was being omitted from output when using newer versions of GNU 'screen'.
+
 
 ** improvements
 
