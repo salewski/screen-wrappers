@@ -3,6 +3,13 @@
 	* HACKING: Project is now using GNU Automake 1.14.1 rather than 1.11.6
 	* bootstrap (AUTOMAKE): specify automake-1.14 rather than automake-1.11
 	(ACLOCAL): specify aclocal-1.14 rather than aclocal-1.11
+	* configure: regenerated
+	* aclocal.m4: ditto
+	* Makefile.in: ditto
+	* src/Makefile.in: ditto
+	* src/main/Makefile.in: ditto
+	* src/main/bash/Makefile.in: ditto
+	* src/main/bash/bin/Makefile.in: ditto
 
 	* src/main/bash/bin/screen-ls.in: use grep rather than head and
 	tail to obtain session names
