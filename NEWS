@@ -10,7 +10,7 @@ fixed will be noted here, as well.
 
 ------------------------------------------------------------------------------
 
-* screen-wrappers 0.2.2 (2016-??-??)
+* screen-wrappers 0.2.2 (2016-06-22)
 
 ** fixes
 
@@ -18,6 +18,7 @@ fixed will be noted here, as well.
 
 *** screen-ls: fix github issue #2: name of last session name was being omitted from output when using newer versions of GNU 'screen'.
 
+    See: https://github.com/salewski/screen-wrappers/issues/2
 
 ** improvements
 
