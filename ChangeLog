@@ -1,5 +1,7 @@
 2016-06-22  Alan D. Salewski  <salewski@att.net>
 
+	* HACKING: Project is now using GNU Automake 1.14.1 rather than 1.11.6
+
 	* src/main/bash/bin/screen-ls.in: use grep rather than head and
 	tail to obtain session names
 	* NEWS: noted above change
