@@ -47,8 +47,8 @@ set -x
 # We use these to allow us to easily use the correct versions of the GNU
 # autotools. Note: On some systems, the tools are /only/ installed with their
 # version number suffixes, so the default names, such as 'aclocal' won't work.
-export ACLOCAL='aclocal-1.11'
-export AUTOMAKE='automake-1.11'
+export ACLOCAL='aclocal-1.14'
+export AUTOMAKE='automake-1.14'
 
 # --force: consider all files obsolete (ignores timestamps)
 # --warnings=all
