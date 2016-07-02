@@ -21,7 +21,7 @@
         <p class="view"><a href="https://github.com/salewski/screen-wrappers">View the Project on GitHub <small>salewski/screen-wrappers</small></a></p>
 
         <ul>
-          <li class="li-tarball-link"><strong>Latest (<code>2016-06-22</code>):</strong> <a href="https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz"><code>screen-wrappers-0.2.2.tar.gz</code></a></li>
+          <li class="li-tarball-link"><strong>Latest (released <code>2016-06-22</code>):</strong> <a href="downloads/screen-wrappers-0.2.2.tar.gz"><code>screen-wrappers-0.2.2.tar.gz</code></a></li>
         </ul>
 
         <ul>
@@ -42,34 +42,68 @@
         <h3>
 <a id="welcome-to-screen-wrappers" class="anchor" href="#welcome-to-screen-wrappers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>'<code>screen-wrappers</code>' project home page</h3>
 
-<p><strong>Please excuse this page content while I flesh out the template provided by the GitHub Pages setup wizard.</strong></p>
+<p>The <code>screen-wrappers</code> project provides a collection of programs
+that wrap various common invocations of the
+<a title="GNU screen project home page" href="https://www.gnu.org/software/screen/">GNU screen(1) program</a>.
+</p>
 
-<br>
+<p>
+The current version provides only the <code>screen-ls(1)</code> program, which
+will format the output of <code>'screen -ls'</code> into a table (which
+improves readability), display the screen session names without the leading
+pid value (for easier sorting), etc.
+</p>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here <a href="https://guides.github.com/features/mastering-markdown/">using GitHub Flavored Markdown</a>, select a template crafted by a designer, and publish. After your page is generated, you can check out the new <code>gh-pages</code> branch locally. If you’re using GitHub Desktop, simply sync your repository and you’ll see the new branch.</p>
+<p>
+The goal of the <code>'screen-wrappers'</code> project is to provide a central
+location to collect tools that wrap <code>screen</code> invocations. It is
+hoped that productizing and sharing these tools will lead both to improvements
+of the tools themselves, help document best practices and/or useful screen
+recipes, and otherwise make them available to a wider audience.
+</p>
 
-<h3>
-<a id="designer-templates" class="anchor" href="#designer-templates" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Designer Templates</h3>
+<p>
+Installation should be as simple as:
+<pre>
+    $ ./configure   # add a --prefix=path/to/some/location to install someplace other than beneath /usr/local
+    $ make
+    $ make check    # optional, but encouraged
+    $ make install
+</pre>
+</p>
 
-<p>We’ve crafted some handsome templates for you to use. Go ahead and click 'Continue to layouts' to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved.</p>
+<p>
+Once installed, you will want to read:
+<ul>
+  <li><code>screen-ls(1)</code></li>
+</ul>
+</p>
 
-<h3>
-<a id="creating-pages-manually" class="anchor" href="#creating-pages-manually" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Creating pages manually</h3>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<br></br>
 
 <h3>
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authors and Contributors</h3>
 
-<p>You can <a href="https://help.github.com/articles/basic-writing-and-formatting-syntax/#mentioning-users-and-teams" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor’s GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p>The <code>screen-wrappers</code> project code was written by <a href="https://github.com/salewski" class="user-mention">Alan D. Salewski</a>.</p>
+
+<p>The <a href="https://github.com/">GitHub</a> project page is located at:
+<ul>
+    <li><a href="https://github.com/salewski/screen-wrappers">https://github.com/salewski/screen-wrappers</a></li>
+</ul>
+</p>
+
 
 <h3>
-<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Support or Contact</h3>
 
-<p>Having trouble with Pages? Check out our <a href="https://help.github.com/pages">documentation</a> or <a href="https://github.com/contact">contact support</a> and we’ll help you sort it out.</p>
+
+<!-- FIXME: add note and link to 'BUGS' file here -->
+
       </section>
+
       <footer>
-        <p>This project is maintained by <a href="https://github.com/salewski">salewski</a></p>
+<!-- <a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Support or Contact</h3> -->
+        <p>This project page is maintained (barely!) by <a href="https://github.com/salewski">Alan D. Salewski</a></p>
         <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
       </footer>
     </div>
