@@ -217,6 +217,21 @@ header ul li + li + li {
   width:89px;
 }
 
+header ul li + li {
+  border-right:none;
+  width: 133px;
+}
+
+.li-tarball-link {
+  border-right:none;
+  width: 100%;
+}
+
+.li-downloads-archive-link {
+  border-right:none;
+  width: 100%;
+}
+
 header ul a strong {
   font-size:14px;
   display:block;
@@ -312,6 +327,14 @@ footer {
 
   header li, header ul li + li + li {
     width:33%;
+  }
+
+  header li, header ul li + li {
+    width:50%;
+  }
+
+  header li, header ul li {
+    width:100%;
   }
 }
 
