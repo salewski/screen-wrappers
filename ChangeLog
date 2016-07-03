@@ -1,5 +1,8 @@
 2016-07-03  Alan D. Salewski  <salewski@att.net>
 
+	* README: renamed file to...
+	* README.md: ...this.
+
 	* README: change from org-mode to github-flavored markdown
 	* NEWS: noted above change
 

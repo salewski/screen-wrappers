@@ -19,11 +19,14 @@ fixed will be noted here, as well.
 
 ** improvements
 
-*** README switched to GitHub-flavored markdown (from org-mode) for improved rendering on GitHub
+*** README(.md) switched to GitHub-flavored markdown (from org-mode) for improved rendering on GitHub
 
     The content of the file was also updated to integrate better from the
     GitHub repository view (which shows the README file by default) with the
     project's GitHub Pages site.
+
+    Also renamed the file from 'README' to 'README.md' so GitHub would
+    recognize it as a markdown file.
 
 
 *** issue #4: build now generates man pages in HTML format, too
