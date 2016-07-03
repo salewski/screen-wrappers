@@ -114,7 +114,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" \
+	"$(DESTDIR)$(man1htmldir)"
 SCRIPTS = $(bin_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -138,7 +139,7 @@ am__can_run_installinfo = \
 man1dir = $(mandir)/man1
 NROFF = nroff
 MANS = $(man1_MANS)
-DATA = $(dist_noinst_DATA)
+DATA = $(dist_noinst_DATA) $(man1html_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
@@ -178,6 +179,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+POD2HTML = @POD2HTML@
 POD2MAN = @POD2MAN@
 RM = @RM@
 RMDIR = @RMDIR@
@@ -212,10 +214,15 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
+man1htmldir = @man1htmldir@
+man5htmldir = @man5htmldir@
+man7htmldir = @man7htmldir@
 mandir = @mandir@
+manhtmldir = @manhtmldir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
+pkghtmldir = @pkghtmldir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
@@ -238,18 +245,24 @@ GSCRIPTS = screen-ls
 
 # "static" man pages, section 1
 S1MANPAGES = 
+S1MANPAGES_AS_HTML = 
 # "generated" man pages, section 1
 G1MANPAGES = $(INPUT_TEMPLATES:.in=.1)
+G1MANPAGES_AS_HTML = $(INPUT_TEMPLATES:.in=.1.html)
 ALL_MANPAGES_1 = $(S1MANPAGES) $(G1MANPAGES)
+ALL_MANPAGES_1_AS_HTML = $(S1MANPAGES_AS_HTML) $(G1MANPAGES_AS_HTML)
 
 # "static" man pages
 SMANPAGES = $(S1MANPAGES)
+SMANPAGES_AS_HTML = $(S1MANPAGES_AS_HTML)
 # "generated" man pages
 GMANPAGES = $(G1MANPAGES)
+GMANPAGES_AS_HTML = $(G1MANPAGES_AS_HTML)
 bin_SCRIPTS = $(SSCRIPTS) $(GSCRIPTS)
 dist_noinst_DATA = $(INPUT_TEMPLATES)
 man1_MANS = $(ALL_MANPAGES_1)
-CLEANFILES = $(GSCRIPTS) $(GMANPAGES)
+man1html_DATA = $(ALL_MANPAGES_1_AS_HTML)
+CLEANFILES = $(GSCRIPTS) $(GMANPAGES) $(GMANPAGES_AS_HTML) $(SMANPAGES_AS_HTML)
 PHONY = \
     clean-local \
     clean-generated-man-pages
@@ -363,6 +376,27 @@ uninstall-man1:
 	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^1][0-9a-z]*$$,1,;x' \
 	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
 	dir='$(DESTDIR)$(man1dir)'; $(am__uninstall_files_from_dir)
+install-man1htmlDATA: $(man1html_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(man1html_DATA)'; test -n "$(man1htmldir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(man1htmldir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(man1htmldir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(man1htmldir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(man1htmldir)" || exit $$?; \
+	done
+
+uninstall-man1htmlDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(man1html_DATA)'; test -n "$(man1htmldir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(man1htmldir)'; $(am__uninstall_files_from_dir)
 tags TAGS:
 
 ctags CTAGS:
@@ -404,7 +438,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(SCRIPTS) $(MANS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man1htmldir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -458,7 +492,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-man
+install-data-am: install-man install-man1htmlDATA
 
 install-dvi: install-dvi-am
 
@@ -502,7 +536,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binSCRIPTS uninstall-man
+uninstall-am: uninstall-binSCRIPTS uninstall-man \
+	uninstall-man1htmlDATA
 
 uninstall-man: uninstall-man1
 
@@ -514,19 +549,20 @@ uninstall-man: uninstall-man1
 	install-binSCRIPTS install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
-	install-man1 install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am tags-am \
-	uninstall uninstall-am uninstall-binSCRIPTS uninstall-man \
-	uninstall-man1
+	install-man1 install-man1htmlDATA install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am tags-am uninstall uninstall-am \
+	uninstall-binSCRIPTS uninstall-man uninstall-man1 \
+	uninstall-man1htmlDATA
 
 
 @do_subst_command@
 
 # Generated files depend on Makefile so they will be rebuilt if $(VERSION) or
 # other do_subst'ituted variables change.
-$(GSCRIPTS) $(GMANPAGES): Makefile
+$(GSCRIPTS) $(GMANPAGES) $(GMANPAGES_AS_HTML) $(SMANPAGES_AS_HTML): Makefile
 
 # These files depend on Makefile so they will be rebuilt if $(VERSION) or
 # other do_subst'ituted variables change. Use chmod a-w to prevent people from
@@ -560,6 +596,26 @@ $(G1MANPAGES): %.1 : %
 	    --name="$${tname}" \
 	    --release=$(PACKAGE)-$(VERSION) \
 	    --section=1 > "$${target_name}"
+
+# $(G1MANPAGES_AS_HTML): %.1.html : %.in
+$(G1MANPAGES_AS_HTML): %.1.html : %
+	target_name="$@" ;\
+	tname=$${target_name};\
+	"$(POD2HTML)" \
+	    --htmlroot='http://example.com/' \
+	    --css='../../stylesheets/pod2html-manpage.css' \
+	    \
+	    --infile='$<'      \
+	    --outfile="$${target_name}" \
+	    \
+	    --title="$${tname}" \
+	    \
+	    --flush      \
+	    --nobacklink \
+	    --noheader   \
+	    --noindex    \
+	    --noquiet    \
+	    --verbose
 
 clean-local:
 	$(MAKE) clean-generated-man-pages

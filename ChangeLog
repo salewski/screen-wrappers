@@ -23,6 +23,15 @@
 	* NEWS: noted above change
 	- adjusted version number for wip release
 
+        * configure: regenerated
+        * Makefile.in: likewise
+        * doc/Makefile.in: new (generated) file
+        * doc/html/Makefile.in: new (generated) file
+        * src/Makefile.in: regenerated
+        * src/main/Makefile.in: likewise
+        * src/main/bash/Makefile.in: likewise
+        * src/main/bash/bin/Makefile.in: likewise
+
 2016-06-22  Alan D. Salewski  <salewski@att.net>
 
 	* NEWS: created empty news section for future 0.2.3 release
