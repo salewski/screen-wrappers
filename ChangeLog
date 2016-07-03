@@ -1,3 +1,28 @@
+2016-07-03  Alan D. Salewski  <salewski@att.net>
+
+	[github issue #4]:
+	* configure.ac (POD2HTML): new program check
+	(pkghtmldir): new AC_SUBST'd variable
+	(manhtmldir): likewise
+	(man1htmldir): likewise
+	(man5htmldir): likewise
+	(man7htmldir): likewise
+	(AC_CONFIG_FILES): add to list: doc/Makefile, doc/html/Makefile
+	(AC_INIT): bump 'm' in M.m.p from 0.2.2-snapshot to 0.3.0-snapshot
+	* Makefile.am (SUBDIRS): add 'doc' subdir to list
+	* doc/Makefile.am: new file
+	* doc/html/Makefile.am: new file
+	* doc/html/stylesheets/pod2html-manpage.css: new file
+	* src/main/bash/bin/Makefile.am (S1MANPAGES_AS_HTML): new (empty) list variable
+	(G1MANPAGES_AS_HTML): new list variable
+	(ALL_MANPAGES_1_AS_HTML): likewise
+	(SMANPAGES_AS_HTML): likewise
+	(GMANPAGES_AS_HTML): likewise
+	(man1html_DATA): defined to support generation of section 1 man pages as html
+	(CLEANFILES): add to list: GMANPAGES_AS_HTML, SMANPAGES_AS_HTML
+	* NEWS: noted above change
+	- adjusted version number for wip release
+
 2016-06-22  Alan D. Salewski  <salewski@att.net>
 
 	* NEWS: created empty news section for future 0.2.3 release

@@ -10,7 +10,7 @@ fixed will be noted here, as well.
 
 ------------------------------------------------------------------------------
 
-* screen-wrappers 0.2.3 (2016-??-??)
+* screen-wrappers 0.3.0 (2016-??-??)
 
 ** fixes
 
@@ -19,9 +19,20 @@ fixed will be noted here, as well.
 
 ** improvements
 
-   (none)
+*** issue #4: build now generates man pages in HTML format, too
+
+    The project is now able to generate man pages in HTML format (in addition
+    to the troff format man pages). This is mainly intended for use by the
+    author to incorporate them into the 'screen-wrappers' project's GitHub
+    Pages web site.  However, the mechanism is generic and will install the
+    pages beneath a 'html' directory beneath the =htmldir= location (which can
+    be specified at configure-time).
+
+    Since this is a new capability, we have bumped up the 'm' in our M.m.p
+    (semver) version number from '0.2.3' to '0.3.0'.
 
 ------------------------------------------------------------------------------
+
 
 * screen-wrappers 0.2.2 (2016-06-22)
 
@@ -29,13 +40,17 @@ fixed will be noted here, as well.
 
 *** screen-ls: minor documentation fix
 
+
 *** screen-ls: fix github issue #2: name of last session name was being omitted from output when using newer versions of GNU 'screen'.
 
     See: https://github.com/salewski/screen-wrappers/issues/2
 
+
 ** improvements
 
    (none)
+
+------------------------------------------------------------------------------
 
 
 * screen-wrappers 0.2.1 (2016-04-10)
@@ -67,6 +82,8 @@ fixed will be noted here, as well.
 ** improvements
 
    (none)
+
+------------------------------------------------------------------------------
 
 
 * screen-wrappers 0.2.0 (2016-03-25)

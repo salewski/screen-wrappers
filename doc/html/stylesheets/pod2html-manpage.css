@@ -1,0 +1,76 @@
+/**
+ * Copyright (C) 2016 Alan D. Salewski <salewski@att.net>
+ *
+ *    This program is free software; you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation; either version 2 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License along
+ *    with this program; if not, write to the Free Software Foundation, Inc.,
+ *    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+/**
+ * This file contains CSS to style the HTML output produced by the pod2html
+ * tool for man page documentation. The intent is approximate the look and feel
+ * of Unix man pages in rendered HTML. In particular, we want to avoid very
+ * wide paragraphs and instead render content as if there were a MANWIDTH
+ * env var setting in effect.
+ */
+
+
+#NAME {
+    color: red;
+}
+
+* {
+    margin:  0;
+    padding: 0;
+}
+
+html, body {    
+    background-color: #fcfcfc;
+    font-family: sans-serif;
+    font-size: 100%;
+    color: #181818;
+}
+
+body {
+    width: 100%;
+    max-width: 70em;
+
+    margin: 8px;
+}
+
+h1 {
+    font-size: 110%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 1.5em;
+}
+
+p {
+    margin-left:     7em;
+    margin-bottom: 1.5em;
+}
+
+dl {
+    margin-left: 7em;
+}
+
+dt {
+    font-family: monospace;
+}
+
+pre {
+    font-family: monospace, courier;
+    margin-left: 7em;
+    margin-bottom: 1em;
+}

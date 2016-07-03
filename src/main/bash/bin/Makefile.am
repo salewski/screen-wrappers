@@ -11,17 +11,23 @@ GSCRIPTS = screen-ls
 
 # "static" man pages, section 1
 S1MANPAGES =
+S1MANPAGES_AS_HTML =
 # "generated" man pages, section 1
 G1MANPAGES = $(INPUT_TEMPLATES:.in=.1)
+G1MANPAGES_AS_HTML = $(INPUT_TEMPLATES:.in=.1.html)
 
 
 ALL_MANPAGES_1 = $(S1MANPAGES) $(G1MANPAGES)
 
+ALL_MANPAGES_1_AS_HTML = $(S1MANPAGES_AS_HTML) $(G1MANPAGES_AS_HTML)
+
 
 # "static" man pages
 SMANPAGES = $(S1MANPAGES)
+SMANPAGES_AS_HTML = $(S1MANPAGES_AS_HTML)
 # "generated" man pages
 GMANPAGES = $(G1MANPAGES)
+GMANPAGES_AS_HTML = $(G1MANPAGES_AS_HTML)
 
 
 bin_SCRIPTS = $(SSCRIPTS) $(GSCRIPTS)
@@ -30,15 +36,17 @@ dist_noinst_DATA = $(INPUT_TEMPLATES)
 
 man1_MANS = $(ALL_MANPAGES_1)
 
+man1html_DATA = $(ALL_MANPAGES_1_AS_HTML)
 
-CLEANFILES = $(GSCRIPTS) $(GMANPAGES)
+
+CLEANFILES = $(GSCRIPTS) $(GMANPAGES) $(GMANPAGES_AS_HTML) $(SMANPAGES_AS_HTML)
 
 @do_subst_command@
 
 
 # Generated files depend on Makefile so they will be rebuilt if $(VERSION) or
 # other do_subst'ituted variables change.
-$(GSCRIPTS) $(GMANPAGES): Makefile
+$(GSCRIPTS) $(GMANPAGES) $(GMANPAGES_AS_HTML) $(SMANPAGES_AS_HTML): Makefile
 
 
 # These files depend on Makefile so they will be rebuilt if $(VERSION) or
@@ -74,6 +82,27 @@ $(G1MANPAGES): %.1 : %
 	    --name="$${tname}" \
 	    --release=$(PACKAGE)-$(VERSION) \
 	    --section=1 > "$${target_name}"
+
+
+# $(G1MANPAGES_AS_HTML): %.1.html : %.in
+$(G1MANPAGES_AS_HTML): %.1.html : %
+	target_name="$@" ;\
+	tname=$${target_name};\
+	"$(POD2HTML)" \
+	    --htmlroot='http://example.com/' \
+	    --css='../../stylesheets/pod2html-manpage.css' \
+	    \
+	    --infile='$<'      \
+	    --outfile="$${target_name}" \
+	    \
+	    --title="$${tname}" \
+	    \
+	    --flush      \
+	    --nobacklink \
+	    --noheader   \
+	    --noindex    \
+	    --noquiet    \
+	    --verbose
 
 
 clean-local:
