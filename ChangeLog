@@ -1,5 +1,8 @@
 2016-07-03  Alan D. Salewski  <salewski@att.net>
 
+	* README: change from org-mode to github-flavored markdown
+	* NEWS: noted above change
+
 	[github issue #4]:
 	* configure.ac (POD2HTML): new program check
 	(pkghtmldir): new AC_SUBST'd variable
