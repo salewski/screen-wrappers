@@ -1,5 +1,13 @@
 2016-07-04  Alan D. Salewski  <salewski@att.net>
 
+	RELEASED screen-wrappers 0.3.0
+
+	* configure.ac: set version to 0.3.0 for release
+	* NEWS: set release date for screen-wrappers 0.3.0
+	* src/main/bash/bin/Makefile.am (clean-pod2html-cache-files): new target
+	(clean-local): invoke above new target
+
+
 	* Makefile.am (EXTRA_DIST): add README.md file to list
 	* Makefile.in: regenerated
 

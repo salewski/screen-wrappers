@@ -107,6 +107,7 @@ $(G1MANPAGES_AS_HTML): %.1.html : %
 
 clean-local:
 	$(MAKE) clean-generated-man-pages
+	$(MAKE) clean-pod2html-cache-files
 
 
 clean-generated-man-pages:
@@ -118,6 +119,19 @@ clean-generated-man-pages:
 	done
 
 
+# In theory, this should not be necessary, but it is required for the author
+# using pod2html from the Debian package perl-5.20.2-3+deb8u5
+#
+# See also:
+#
+#     https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=616582
+#     https://rt.perl.org/Public/Bug/Display.html?id=69782
+#
+clean-pod2html-cache-files:
+	$(RM) -f -v pod2htmd.tmp pod2htmi.tmp
+
+
 PHONY = \
     clean-local \
-    clean-generated-man-pages
+    clean-generated-man-pages \
+    clean-pod2html-cache-files
