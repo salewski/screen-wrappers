@@ -101,6 +101,6 @@ install the program via:
 [SCREEN]:  http://www.gnu.org/software/screen/
 
 
-# Local Variables:
-#     mode: gfm
-# End:
+Local Variables:
+    mode: gfm
+End:
