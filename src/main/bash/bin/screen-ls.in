@@ -249,86 +249,260 @@ f_is_screen_4_dot_3_or_newer () {
 }
 
 
-while test $# -gt 0 ; do
+pos_last_plus_one=$(( $# + 1 ))
 
-    option=$(expr "x$1" : 'x\(--[^=]*\)' \| \
-                  "x$1" : 'x\(-.\)'      \| \
-                  "x$1" : 'x\(.*\)')
+# Each value is one or zero, which indicates whether or not the option is
+# expected to have an argument.
+#
+declare -A longopt_spec=(
+    ['help']=0      # -h
+    ['version']=0   # -V
 
-    optarg=$(expr "x$1" : 'x--[^=]*=\(.*\)' \| \
-                  "x$1" : 'x-.\(.*\)')
+    ['long']=0      # -l
+    ['show-pid']=0  # -p
+    ['unsorted']=0  # -U
+    ['verbose']=0   # -v
+)
 
-    case $1 in
-
-        --help | -h )
-            # print help message
-            f_print_help
-            exit 0
-            ;;
-
-
-        --long | -l )
-            opt_show_long=true
-            shift
-            ;;
-
-
-        --show-pid | -p )
-            opt_show_pid=true
-            shift
-            ;;
-
-
-        --unsorted | -U )
-            opt_show_sorted=false
-            shift
-            ;;
-
-
-        --version | -V )
-            # print program version info
-            f_print_version
-            exit 0
-            ;;
-
-        --verbose | -v )
-            # Accumulating 'verbose' opt. A single -v opt simply turns
-            # $gl_be_verbose on; two or more '-v' opts turns tracing on. Note
-            # that if you intend to turn tracing on, you'll probably want your
-            # -v opts to be the first opts on the command line (so they take
-            # effect earlier).
-            if $gl_be_verbose; then
-                # We've seen at least one -v opt before, so now we're turning tracing on
-                set -x
-            else
-                # First -v opt we're seeing
-                gl_be_verbose=true
-            fi
-            shift
-            ;;
-
-        -- ) # Stop option processing
-            shift
-            while test $# -gt 0; do
-                ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]=$1
-                shift
-            done
-            break
-            ;;
-
-        --* | -* )
-            # Unrecognized option; we'll pass it through to screen(1)
-            ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]=$1
-            shift
-            ;;
-
-        * )
-            # Unrecognized non-option; we'll pass it through to screen(1)
-            ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]=$1
-            shift
-            ;;
-    esac
+# internal sanity check
+for one_key in "${!longopt_spec[@]}"; do
+    one_val=${longopt_spec[${one_key}]}
+    if [[ $one_val =~ ^[01]$ ]]; then :; else
+        printf "${PROG} (BUG) [line $LINENO]: value (%s) for longopt key '%s' must be either 0 or 1; bailing out\n" \
+               "${one_val}" "${one_key}" 1>&2
+        exit 1
+    fi
 done
+
+if test $# -gt 0; then
+
+    # Using getopts in "silent mode". Note that adding '-' to the optstring allows us to
+    # process GNU-style long-form options; that option is specified to take an argument to
+    # cause getopts to place whatever follows the second '-' character into OPTARG.
+    #
+    # Note that getopts will automatically stop processsing options upon encountering
+    # '--', but we still need to deal with the pathological form --=BLAH (no option name,
+    # just a value using the equals-sign syntax).
+    #
+    while getopts ':-:hlpUVv' opt
+    do
+        : $PROG \(trace: $LINENO\): opt is: $opt
+
+        if test "${opt}" = '-'; then
+
+            # Intercepting processing of long-form option. This conditional
+            # block will set up the 'opt', 'OPTARG', and 'OPTIND' variables for
+            # the code that follows, just as if getopts had the capability to
+            # process long-form options.
+
+            # OPTARG here is one of:
+            #
+            #     =BLAH    (which means user specified '--=BLAH')
+            # or:
+            #     foo
+            # or:
+            #     foo=FOOVAL
+
+            if [[ ${OPTARG} =~ .*=.* ]]; then
+
+                : $PROG \(trace: $LINENO\): OPTARG is name=value style
+
+                # Keep everything up to the first '=' sign. Note that if the
+                # option was specified as: --foo=FOOVAL, then $opt here will be
+                # 'foo' (no hyphen chars).
+                opt=${OPTARG/=*/}
+                : $PROG \(trace: $LINENO\): opt is: $opt
+
+                : $PROG \(trace: $LINENO\): a long option name must be at least two characters in length
+                if test ${#opt} -le 1; then
+                    printf "${PROG} (error): invalid long option '%s'; bailing out\n" "${opt}" 1>&2
+                    f_print_help 1>&2
+                    exit 1
+                fi
+
+                t_exists=false
+                for one_key in "${!longopt_spec[@]}"; do
+                    if test "${opt}" = "${one_key}"; then
+                        t_exists=true
+                        break
+                    fi
+                done
+
+                if $t_exists; then :; else
+
+                    # Unrecognized option; we'll pass it through to screen(1). Note that
+                    # we need to restore the leading '-' that getopts has sliced off.
+                    #
+                    ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]="-${OPTARG}"
+                    continue
+                fi
+
+                # Since we know the option was specified in --foo=BAR form, the
+                # option was specified erroneously unless the option's long-form
+                # spec indicates that it can accept an argument.
+                #
+                if test ${longopt_spec[${opt}]} -ne 1; then
+                    printf "${PROG} (error): option '%s' does not take an argument; bailing out\n" "${opt}" 1>&2
+                    f_print_help 1>&2
+                    exit 1
+                fi
+
+                OPTARG=${OPTARG#*=}  # keep everything after the first '=' sign
+                : $PROG \(trace: $LINENO\): OPTARG is: $OPTARG
+
+            else
+                : $PROG \(trace: $LINENO\): OPTARG is name-only style
+
+                opt="$OPTARG"
+                : $PROG \(trace: $LINENO\): opt is: $opt
+
+                if test -z "${opt}"; then
+
+                    # This should be a "can't happen" scenario; since bash's 'getopts'
+                    # implementation should directly handle the magic '--' token, we
+                    # should never fall through here.
+
+                    printf "${PROG} (BUG) [line $LINENO]: received empty OPTARG, which means getopts did not handle the stand-alone '--' token; bailing out\n" 1>&2
+                    exit 1
+                fi
+
+                : $PROG \(trace: $LINENO\): a non-empty long option name must be at least two characters in length
+                if test ${#opt} -lt 2; then
+                    printf "${PROG} (error): invalid long option '%s'; bailing out\n" "${opt}" 1>&2
+                    f_print_help 1>&2
+                    exit 1
+                fi
+
+                t_exists=false
+                for one_key in "${!longopt_spec[@]}"; do
+                    if test "${opt}" = "${one_key}"; then
+                        t_exists=true
+                        break
+                    fi
+                done
+
+                if $t_exists; then :; else
+
+                    # Unrecognized option; we'll pass it through to screen(1). Note that
+                    # we need to restore the leading '-' that getopts has sliced off.
+                    #
+                    ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]="-${OPTARG}"
+                    continue
+                fi
+
+                # We know the option was specified in one of the following forms:
+                #
+                #     --foo
+                # or:
+                #     --foo FOOVAL
+                #
+                # The option's long-form spec will tell us whether or not an argument is
+                # expected for the option.
+                #
+                if test ${longopt_spec[${opt}]} -eq 1; then
+
+                    # If bumping OPTIND would put us more than one beyond the "last pos
+                    # plus one", then there is no argument provided at position OPTIND for
+                    # us to consume.
+                    #
+                    if (( $(( $OPTIND + 1 )) > pos_last_plus_one )); then
+
+                        printf "${PROG} (error): missing argument for option -${OPTARG}\n" 1>&2
+                        f_print_help 1>&2
+                        exit 1
+                    fi
+
+                    OPTARG=${@:${OPTIND}:1}
+                    (( ++OPTIND ))
+                    : $PROG \(trace: $LINENO\): manually incremented OPTIND to: $OPTIND
+                fi
+            fi
+        fi
+
+        # Normal getopts style processing happens beneath here, with the slight
+        # twist that 'opt' may contain a long-form option name.
+
+        case $opt in
+
+            'help' | 'h' )
+                # print help message
+                f_print_help
+                exit 0
+                ;;
+
+
+            'long' | 'l' )
+                opt_show_long=true
+                ;;
+
+
+            'show-pid' | 'p' )
+                opt_show_pid=true
+                ;;
+
+
+            'unsorted' | 'U' )
+                opt_show_sorted=false
+                ;;
+
+
+            'version' | 'V' )
+                # print program version info
+                f_print_version
+                exit 0
+                ;;
+
+
+            'verbose' | 'v' )
+                # Accumulating 'verbose' opt. A single -v opt simply turns $gl_be_verbose
+                # on; two or more '-v' opts turns tracing on. Note that if you intend to
+                # turn tracing on, you'll probably want your -v opts to be the first opts
+                # on the command line (so they take effect earlier).
+                #
+                if $gl_be_verbose; then
+                    # We've seen at least one -v opt before, so now we're turning tracing on
+                    set -x
+                else
+                    # First -v opt we're seeing
+                    gl_be_verbose=true
+                fi
+                ;;
+
+
+            ':')  # getopts put : in opt
+                  printf "${PROG} (error): missing argument for option -${OPTARG}\n" 1>&2
+                  f_print_help 1>&2
+                  exit 1
+                  ;;
+
+            '?')  # getopts put ? in opt
+                  # Unrecognized option; we'll pass it through to screen(1). Note that we
+                  # need to restore the leading '-' that getopts has sliced off.
+                  ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]="-${OPTARG}"
+                  ;;
+
+            * )   printf "${PROG} (BUG) [line $LINENO]: unhandled option case; opt: '$opt',  OPTARG: '$OPTARG'\n" 1>&2
+                  ;;
+
+        esac
+    done
+fi
+
+# shift off all arguments already handled
+let ii=1;  # shell OPTIND index starts at 1
+while (( ii < ${OPTIND} )); do
+    shift
+    (( ++ii ))
+    : $PROG \(trace: $LINENO\): ii is now: $ii
+done
+
+# Drain any remaining command line parameters not processed by getopts and add them to the
+# list that we will pass through to screen(1):
+while test $# -gt 0; do
+    ARGS_FOR_SCREEN[${#ARGS_FOR_SCREEN[@]}]=$1
+    shift
+done
+
 
 # Effectively a NOOP. Yes, arguably a UUoC, but useful because we're composing
 # pipelines. If you know of a better way to do this, please speak up!

@@ -29,7 +29,25 @@ fixed will be noted here, as well.
     recognize it as a markdown file.
 
 
+*** issue #3: screen-ls: allow short-form command line options to be bundled
+
+    https://github.com/salewski/screen-wrappers/issues/3
+
+    All of the following representative invocations are now equivalent:
+
+    :     $ screen-ls -l -p
+    :     $ screen-ls -lp
+
+    :     $ screen-ls -p -l
+    :     $ screen-ls -pl
+
+    Prior to this change, the bundled variations ('-lp' and '-pl') caused the
+    program to exit with an error code.
+
+
 *** issue #4: build now generates man pages in HTML format, too
+
+    https://github.com/salewski/screen-wrappers/issues/4
 
     The project is now able to generate man pages in HTML format (in addition
     to the troff format man pages). This is mainly intended for use by the
