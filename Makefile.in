@@ -78,8 +78,8 @@ POST_UNINSTALL = :
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) AUTHORS COPYING \
-	ChangeLog INSTALL NEWS README autotools/install-sh \
-	autotools/missing $(top_srcdir)/autotools/install-sh \
+	ChangeLog INSTALL NEWS autotools/install-sh autotools/missing \
+	$(top_srcdir)/autotools/install-sh \
 	$(top_srcdir)/autotools/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -290,7 +290,7 @@ SUBDIRS = doc \
 # The ACLOCAL_AMFLAGS are used by 'autoreconf' and by the Makefile
 # rebuild rule when they need to run 'aclocal'.
 ACLOCAL_AMFLAGS = -I autotools
-EXTRA_DIST = BUGS HACKING
+EXTRA_DIST = BUGS HACKING README.md
 MAINTAINERCLEANFILES = config.status \
                        config.log    \
                        $(PACKAGE)-$(VERSION).tar.gz \
