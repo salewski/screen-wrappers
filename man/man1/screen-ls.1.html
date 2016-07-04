@@ -1,0 +1,228 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>screen-ls.1.html</title>
+<link rel="stylesheet" href="../../stylesheets/pod2html-manpage.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+</head>
+
+<body>
+
+
+
+<h1 id="NAME">NAME</h1>
+
+<pre><code>  screen-ls - pretty-prints the output from &#39;screen -ls&#39;</code></pre>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>  screen-ls -h
+  screen-ls -V
+  screen-ls [OPTION...] [--] [SCREEN_OPTIONS]</code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>The <code>screen-ls</code> program invokes the GNU <a href="http://man.he.net/man1/screen">screen(1)</a> program with the <code>-ls</code> option to obtain a list of screen session names, and pretty prints the output. See <a href="#EXAMPLES">&quot;EXAMPLES&quot;</a> below.</p>
+
+<p>By default, prints the <a href="http://man.he.net/man1/screen">screen(1)</a> session names (without the leading pid and <code>.</code> char) from the output of the <code>screen -ls</code> command.</p>
+
+<p>With the <code>-l</code> (<code>--long</code>) option, will print the full output in a readable table.</p>
+
+<p>With the <code>-p</code> (<code>--show-pid</code>) option, will include the pid and &lt;.&gt; char which are suppressed by default.</p>
+
+<p>Any options not recognized by <code>screen-ls</code> will be passed through to <a href="http://man.he.net/man1/screen">screen(1)</a>. You can explicitly stop <code>screen-ls</code> options processing by using the <code>--</code> pseudo-option; all options after that will be passed through to <a href="http://man.he.net/man1/screen">screen(1)</a>.</p>
+
+<h2 id="Motivation">Motivation</h2>
+
+<p>When working with GNU <a href="http://man.he.net/man1/screen">screen(1)</a>, it is not uncommon to accumulate a large number of <a href="http://man.he.net/man1/screen">screen(1)</a> sessions. This naturally leads to the need to locate &quot;interesting&quot; sessions at a later time when you wish to reconnect to them. And that, of course, becomes more difficult as the number of <a href="http://man.he.net/man1/screen">screen(1)</a> sessions increases.</p>
+
+<p>Pretty-printing the output makes it easier to read by inspection, and suppressing everything except the <a href="http://man.he.net/man1/screen">screen(1)</a> session names from the output often simplifies downstream processing in a Unix pipeline.</p>
+
+<h1 id="OPTIONS">OPTIONS</h1>
+
+<p>Below are the command line options recognized by <code>screen-ls</code>. Any options not recognized by <code>screen-ls</code> will be passed through to the <a href="http://man.he.net/man1/screen">screen(1)</a> subprocess.</p>
+
+<p>You can explicitly stop <code>screen-ls</code> options processing by using the <code>--</code> pseudo-option; all options after that will be passed through to <a href="http://man.he.net/man1/screen">screen(1)</a>.</p>
+
+<dl>
+
+<dt id="h---help">-h, --help</dt>
+<dd>
+
+<p>Print help usage message</p>
+
+</dd>
+<dt id="l---long">-l, --long</dt>
+<dd>
+
+<p>Use a long listing format.</p>
+
+</dd>
+<dt id="p---show-pid">-p, --show-pid</dt>
+<dd>
+
+<p>Causes <code>screen-ls</code> to display the &#39;&lt;pid&gt;.&#39; prefix in screen session names. By default, <code>screen-ls</code> suppresses the output of this prefix.</p>
+
+</dd>
+<dt id="U---unsorted">-U, --unsorted</dt>
+<dd>
+
+<p>Do not sort output; list <a href="http://man.he.net/man1/screen">screen(1)</a> sessions in order output by the <code>screen -ls</code> subprocess invocation.</p>
+
+<p>By default, <code>screen-ls</code> sorts the output by <a href="http://man.he.net/man1/screen">screen(1)</a> session name; this is an optimization for the common case. Prior to this behavior, the most common invocation of <code>screen-ls</code> was:</p>
+
+<pre><code>    $ screen-ls | sort</code></pre>
+
+<p>The <code>-U</code> (<code>--unsorted</code>) option exists to allow you to disable this behavior, though.</p>
+
+</dd>
+<dt id="V---version">-V, --version</dt>
+<dd>
+
+<p>Print the version of the program to stdout and then exit.</p>
+
+</dd>
+<dt id="v---verbose">-v, --verbose</dt>
+<dd>
+
+<p>Turn on verbose mode. Two or more -v options turns on tracing (invokes <code>set -x</code>; this is primarily intended for developers).</p>
+
+</dd>
+</dl>
+
+<h1 id="EXAMPLES">EXAMPLES</h1>
+
+<p>For reference, the default output of <code>screen -ls</code> might look like this:</p>
+
+<pre><code>    $ screen -ls
+    There are screens on:
+        779.screen-wrappers-dev (07/08/2013 01:09:19 PM)        (Attached)
+        26043.datomic-local     (07/07/2013 02:20:50 PM)        (Attached)
+        14926.emacs-dev (06/30/2013 07:57:14 PM)        (Attached)
+        24078.activemq-mysql-prod       (06/23/2013 01:22:41 AM)        (Detached)
+        803.build-build (05/22/2013 06:02:49 AM)        (Detached)
+        12522.release-5.5       (05/18/2013 06:09:31 AM)        (Attached)
+        5200.mutt      (05/17/2013 10:21:59 AM)        (Attached)
+    ...
+    49 Sockets in /var/run/screen/S-ads.</code></pre>
+
+<p>That output is truncated, but you get the idea. When there are only two or three <a href="http://man.he.net/man1/screen">screen(1)</a> session active, then the default output works fine. However, when there are a large number of <a href="http://man.he.net/man1/screen">screen(1)</a> sessions active (such as in above example, where there are 49), it can become difficult to find the interesting ones. Enter <code>screen-ls</code>.</p>
+
+<p>By default, <code>screen-ls</code> strips away all data except the <a href="http://man.he.net/man1/screen">screen(1)</a> session name, and it removes the pid and following <code>.</code> character from those, as well. Here is how the above output appears when generated by <code>screen-ls</code>:</p>
+
+<pre><code>    $ screen-ls
+    activemq-mysql-prod
+    build-build
+    datomic-local
+    emacs-dev
+    mutt
+    release-5.5
+    screen-wrappers-dev
+    ...</code></pre>
+
+<p>That is both easier to read, and easier to process by downstream tools in a pipeline.</p>
+
+<p>Note that <code>screen-ls</code> sorted the output by the <a href="http://man.he.net/man1/screen">screen(1)</a> session name automatically. You can disable the sorting behavior by providing the <code>-U</code> (<code>--unsorted</code>) option:</p>
+
+<pre><code>    $ screen-ls -U
+    screen-wrappers-dev
+    datomic-local
+    emacs-dev
+    activemq-mysql-prod
+    build-build
+    release-5.5
+    mutt
+    ...</code></pre>
+
+<p>An example of common usage in a pipeline is to use <code>screen-ls</code> to find a given <a href="http://man.he.net/man1/screen">screen(1)</a> session, and then use the shell&#39;s command recall and command line editing facilities to feed that found <a href="http://man.he.net/man1/screen">screen(1)</a> session name to <a href="http://man.he.net/man1/screen">screen(1)</a> in order to reconnect to it. Using our running example, let&#39;s say we want to reconnect to the <a href="http://man.he.net/man1/screen">screen(1)</a> session in which emacs development is underway. In a POSIX compatible shell, that can be accomplished thus:</p>
+
+<pre><code>    $ screen-ls | grep emacs
+    emacs-dev
+
+    $ screen -d -r $(screen-ls | grep emacs)</code></pre>
+
+<p>Using <a href="http://man.he.net/man1/bash">bash(1)</a>, the keystrokes required for that invocation on the author&#39;s machine are:</p>
+
+<pre><code>    s c r TAB - l TAB | g r e p SPACE e m a c s RET
+
+    C-p C-a s c r TAB - d SPACE - r SPACE $ ( C-e ) RET</code></pre>
+
+<p>While that may be tedious to read, it flies off the fingers. Compare that to accomplishing the same task reliably without <code>screen-ls</code>.</p>
+
+<p>If you have duplicate session names, in order to reconnect to a particular <a href="http://man.he.net/man1/screen">screen(1)</a> session you will need to specify the <code>pid</code> prefix for the session name that <code>screen-ls</code> suppresses by default. You can prevent <code>screen-ls</code> from suppressing this behavior by specifying the <code>-p</code> (<code>--show-pid</code>) option:</p>
+
+<pre><code>    $ screen-ls -p -U
+    779.screen-wrappers-dev
+    713.screen-wrappers-dev
+    26043.datomic-local
+    14926.emacs-dev
+    24078.activemq-mysql-prod
+    803.build-build
+    12522.release-5.5
+    5200.mutt
+    ...
+
+    $ screen -d -r 713.screen-wrappers-dev</code></pre>
+
+<p>When invoked with the <code>-l</code> (<code>--long</code>) option, <code>screen-ls</code> will print the <code>screen ls</code> output in a readable table (still sorted by <a href="http://man.he.net/man1/screen">screen(1)</a> session name):</p>
+
+<pre><code>    $ screen-ls -l
+    activemq-mysql-prod  (06/23/2013 01:22:41 AM)  (Detached)
+    build-build          (05/22/2013 06:02:49 AM)  (Detached)
+    datomic-local        (07/07/2013 02:20:50 PM)  (Attached)
+    emacs-dev            (06/30/2013 07:57:14 PM)  (Attached)
+    mutt                 (05/17/2013 10:21:59 AM)  (Attached)
+    release-5.5          (05/18/2013 06:09:31 AM)  (Attached)
+    screen-wrappers-dev  (07/08/2013 01:09:19 PM)  (Attached)
+    ...</code></pre>
+
+<p>Of course, to see the <code>pid</code> prefixes on the session names, you would need to add the <code>-p</code> option to that:</p>
+
+<pre><code>    $ screen-ls -l -p
+    24078.activemq-mysql-prod  (06/23/2013 01:22:41 AM)  (Detached)
+    803.build-build            (05/22/2013 06:02:49 AM)  (Detached)
+    26043.datomic-local        (07/07/2013 02:20:50 PM)  (Attached)
+    14926.emacs-dev            (06/30/2013 07:57:14 PM)  (Attached)
+    5200.mutt                  (05/17/2013 10:21:59 AM)  (Attached)
+    12522.release-5.5          (05/18/2013 06:09:31 AM)  (Attached)
+    779.screen-wrappers-dev    (07/08/2013 01:09:19 PM)  (Attached)
+    ...</code></pre>
+
+<p>Note that the output is still sorted by the <a href="http://man.he.net/man1/screen">screen(1)</a> session name (as it exists without the &#39;&lt;pid&gt;.&#39; prefix, the same way you would see it within <a href="http://man.he.net/man1/screen">screen(1)</a> when output via screen&#39;s <code>sessionname</code> command).</p>
+
+<h1 id="DIAGNOSTICS">DIAGNOSTICS</h1>
+
+<p>Exits with 0 (zero) status on success, nonzero on error.</p>
+
+<h1 id="BUGS">BUGS</h1>
+
+<ul>
+
+<li><p>Internally checks that the exit status of <code>screen -ls</code> is 1 because empirical testing reveals that that is the exit status returned even upon success (unless we were to add the <code>-q</code> option, which would have the undesirable effect of suppressing the output we are trying to format). See comments in <code>screen-ls</code> source code for more details.</p>
+
+</li>
+</ul>
+
+<p>If you find any others, please send a bug report to the author. See <a href="#AUTHOR">&quot;AUTHOR&quot;</a></p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Written by Alan D. Salewski &lt;salewski@att.net&gt;.</p>
+
+<h1 id="CONTRIBUTORS">CONTRIBUTORS</h1>
+
+<pre><code>    John Marquart (jomarqua@gmail.com)</code></pre>
+
+<h1 id="COPYLEFT">COPYLEFT</h1>
+
+<p>Copyright (C) 2013, 2016 Alan D. Salewski &lt;salewski@att.net&gt;</p>
+
+<p>License GPLv2+: GNU GPL version 2 or later &lt;http://gnu.org/licenses/gpl.html&gt;. This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent permitted by law.</p>
+
+
+</body>
+
+</html>
+
+
