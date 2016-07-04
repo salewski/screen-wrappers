@@ -1,5 +1,7 @@
 2016-07-04  Alan D. Salewski  <salewski@att.net>
 
+	* Makefile.am (EXTRA_DIST): add README.md file to list
+
 	[github issue #3]:
 	* src/main/bash/bin/screen-ls.in: allow short-form command line opts to be bundled
 	* NEWS: noted above change

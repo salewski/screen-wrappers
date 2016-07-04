@@ -10,7 +10,7 @@ ACLOCAL_AMFLAGS = -I autotools
 
 
 ## ensure that these files make it into the distribution tarball
-EXTRA_DIST = BUGS HACKING
+EXTRA_DIST = BUGS HACKING README.md
 
 MAINTAINERCLEANFILES = config.status \
                        config.log    \
