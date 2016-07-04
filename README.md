@@ -11,10 +11,10 @@ The 'screen-wrappers' project web site is:
 
 The latest version of the project is `0.2.2`, and can be downloaded from:
 
-   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz
-   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-1
-   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-256
-   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA3-256
+   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz  
+   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-1  
+   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-256  
+   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA3-256  
     
 Older releases are available from the project's downloads page:
 
