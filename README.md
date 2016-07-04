@@ -7,18 +7,18 @@ various common invocations of the [GNU screen(1) program][SCREEN].
 
 The 'screen-wrappers' project web site is:
 
-   https://salewski.github.io/screen-wrappers/
+   * https://salewski.github.io/screen-wrappers/
 
 The latest version of the project is `0.2.2`, and can be downloaded from:
 
-   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz  
-   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-1  
-   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-256  
-   https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA3-256  
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-1
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-256
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA3-256
     
 Older releases are available from the project's downloads page:
 
-   https://salewski.github.io/screen-wrappers/downloads/
+   * https://salewski.github.io/screen-wrappers/downloads/
 
 The current version provides only the `screen-ls(1)` program, which will
 format the output of `'screen -ls'` into a table (which improves readability),
@@ -68,7 +68,7 @@ appreciate hearing about any successes or failures in this area. In the
 unlikely event that your system does not already have bash installed, it can
 be obtained from the project's site:
 
-   http://www.gnu.org/software/bash/
+   * http://www.gnu.org/software/bash/
 
 On a Debian system (including derivatives, such as Ubuntu), you can install
 the program via:
@@ -85,7 +85,7 @@ Because the `'screen-wrappers'` programs are wrappers around the GNU
 `'screen'` program, that needs to be installed as well (of course). The
 'screen' program is available here:
 
-   http://www.gnu.org/software/screen/
+   * http://www.gnu.org/software/screen/
 
 On a Debian system (including derivatives, such as Ubuntu), you can probably
 install the program via:
