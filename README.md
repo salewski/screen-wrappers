@@ -99,8 +99,3 @@ install the program via:
 [INSTALL]: https://github.com/salewski/screen-wrappers/blob/master/INSTALL
 [NEWS]:    https://github.com/salewski/screen-wrappers/blob/master/NEWS
 [SCREEN]:  http://www.gnu.org/software/screen/
-
-
-Local Variables:
-    mode: gfm
-End:
