@@ -1,4 +1,4 @@
-This is the README file for the `'screen-wrappers'` project.
+This is the README.md file for the `'screen-wrappers'` project.
 
 # Overview
 
