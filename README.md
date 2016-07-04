@@ -9,12 +9,12 @@ The 'screen-wrappers' project web site is:
 
    * https://salewski.github.io/screen-wrappers/
 
-The latest version of the project is `0.2.2`, and can be downloaded from:
+The latest version of the project is `0.3.0`, and can be downloaded from:
 
-   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz
-   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-1
-   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA-256
-   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.2.2.tar.gz.SHA3-256
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.0.tar.gz
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.0.tar.gz.SHA-1
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.0.tar.gz.SHA-256
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.0.tar.gz.SHA3-256
     
 Older releases are available from the project's downloads page:
 
@@ -32,9 +32,9 @@ themselves, help document best practices and/or useful screen recipes, and
 otherwise make them available to a wider audience.
 
 Once installed, you will want to read:
-```
-    screen-ls(1)
-```
+
+   * [screen-ls(1)]
+
 
 See the "Prerequisites" section below for other programs that must be
 installed and configured on your system before you can install the
@@ -122,9 +122,10 @@ Copyright (C) 2013, 2016 Alan D. Salewski <salewski@att.net>
 
 
 
-[BUGS]:    https://github.com/salewski/screen-wrappers/blob/master/BUGS
-[COPYING]: https://github.com/salewski/screen-wrappers/blob/master/COPYING
-[HACKING]: https://github.com/salewski/screen-wrappers/blob/master/HACKING
-[INSTALL]: https://github.com/salewski/screen-wrappers/blob/master/INSTALL
-[NEWS]:    https://github.com/salewski/screen-wrappers/blob/master/NEWS
-[SCREEN]:  http://www.gnu.org/software/screen/
+[BUGS]:         https://github.com/salewski/screen-wrappers/blob/master/BUGS
+[COPYING]:      https://github.com/salewski/screen-wrappers/blob/master/COPYING
+[HACKING]:      https://github.com/salewski/screen-wrappers/blob/master/HACKING
+[INSTALL]:      https://github.com/salewski/screen-wrappers/blob/master/INSTALL
+[NEWS]:         https://github.com/salewski/screen-wrappers/blob/master/NEWS
+[screen-ls(1)]: https://salewski.github.io/screen-wrappers/man/man1/screen-ls.1.html
+[SCREEN]:       http://www.gnu.org/software/screen/
