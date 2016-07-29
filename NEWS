@@ -14,8 +14,17 @@ fixed will be noted here, as well.
 
 ** fixes
 
-   (none)
+*** issue #5: screen-wrappers build now omits `--nobacklink` when invoking pod2html
 
+    The `'--no-backlink'` option to `pod2html` requests what is the default
+    behavior for that tool, but that command line option is not available on
+    some older `pod2html` versions (such as that from perl 5.8.8) on hosts on
+    which we wish to build screen-wrappers. We therefore have removed the
+    option from the Makefile recipe; the resulting build is identical in
+    behavior and outcome to that prior to this change, but the build is now
+    able to complete successfully on a slightly wider range of machines (at
+    the expense of the build recipe being slightly less explicit about the
+    wanted behavior).
 
 ** improvements
 

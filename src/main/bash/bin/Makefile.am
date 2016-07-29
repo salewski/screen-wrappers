@@ -98,7 +98,6 @@ $(G1MANPAGES_AS_HTML): %.1.html : %
 	    --title="$${tname}" \
 	    \
 	    --flush      \
-	    --nobacklink \
 	    --noheader   \
 	    --noindex    \
 	    --noquiet    \
