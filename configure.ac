@@ -4,7 +4,7 @@ dnl +-------------------------+
 dnl |  Autotools Boilerplate  |
 dnl +-------------------------+
 
-AC_INIT([screen-wrappers], [0.3.2-snapshot], [salewski@att.net])
+AC_INIT([screen-wrappers], [0.3.2], [salewski@att.net])
 
 dnl Ensure that a recent-enough version of Autoconf is being used
 AC_PREREQ([2.69])
