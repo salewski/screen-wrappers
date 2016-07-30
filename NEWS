@@ -14,7 +14,31 @@ fixed will be noted here, as well.
 
 ** fixes
 
-   (none)
+*** issue #7: screen-ls no longer swallows output of old versions of screen
+
+    https://github.com/salewski/screen-wrappers/issues/7
+
+    Prior to this fix the 'screen-ls' program was only able to parse the
+    'screen -ls' output from more recent versions of GNU 'screen', and was
+    swallowing all of the output from ancient versions of 'screen' that
+    produced a slightly different output.
+
+    The program was expecting to parse output in the form:
+
+    :        28189.screen-wrappers-hacking   (06/22/2016 06:49:18 PM)        (Attached)
+
+    but was inadvertently swallowing all of the output from older versions,
+    which have the form:
+
+    :        28189.screen-wrappers-hacking   (Attached)
+
+    The 'screen-wrappers' author is still encountering those ancient versions
+    "in the wild", so the 'screen-ls' program has been enhanced to be flexible
+    enough to correctly parse both forms.
+
+    Old format behavior tested with 'screen' 4.00.03 (FAU) 23-Oct-06.
+
+    New format behavior tested with 'screen' 4.04.00 (GNU) 19-Jun-16.
 
 
 ** improvements
@@ -29,6 +53,8 @@ fixed will be noted here, as well.
 ** fixes
 
 *** issue #5: screen-wrappers build now omits `--nobacklink` when invoking pod2html
+
+    https://github.com/salewski/screen-wrappers/issues/5
 
     The `'--no-backlink'` option to `pod2html` requests what is the default
     behavior for that tool, but that command line option is not available on

@@ -1,3 +1,18 @@
+2016-07-30  Alan D. Salewski  <salewski@att.net>
+
+	[github issue #7]:
+	* src/main/bash/bin/screen-ls.in ($re_sed_l_chunks): removed
+	($re_chunks_type_005): new variable; regex that matches the output
+	of 'screen -ls' from screen version '4.00.03 (FAU) 23-Oct-06'
+	($re_chunks_type_010): new variable; regex that matches the output
+	of 'screen -ls' from newer versions of screen (tested with
+	'4.04.00 (GNU) 19-Jun-16').
+	($re_chunks): new variable
+	($t_session_name): now obtains value from BASH_REMATCH rather than sed
+	($t_session_date): likewise
+	($t_session_state): likewise
+	* NEWS: noted above change
+
 2016-07-29  Alan D. Salewski  <salewski@att.net>
 
 	* NEWS: created empty news section for future 0.3.2 release

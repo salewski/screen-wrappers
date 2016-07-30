@@ -568,18 +568,77 @@ else
     SCREEN_LS_ESTAT=1
 fi
 
-if $opt_show_long; then
+# GitHub issue #7 note: Different versions of 'screen' produce different
+# output, so our regexen below try to be flexible enough to accommodate all of
+# the variations known to the screen-wrappers author. If you encounter a
+# different variation than those supported here, the result will likely be
+# that screen-ls swallows all of the output from the 'screen -ls' command (so
+# it will be obvious that there is a problem); please let the screen-wrappers
+# author know!
+#
+# Examples of known output formats:
+#
+#             28189.screen-wrappers-hacking   (Attached)
+#
+#             28189.screen-wrappers-hacking   (06/22/2016 06:49:18 PM)        (Attached)
+#
 
-    # This regex captures the three fields of interest, for reuse on the left side
-    # of our sed 's' commands below.
-    re_sed_l_chunks='^[[:space:]]*\(.\{1,\}\)[[:space:]]\{1,\}\([(][^)]\{1,\}[)]\)[[:space:]]\{1,\}\([(][^)]\{1,\}[)]\)[[:space:]]*$'
+# Matches:
+#             28189.screen-wrappers-hacking   (Attached)
+#
+# Note that we always need to have 3 capture groups, so we have an empty
+# capture group in our expression here (where the date info is located in the
+# output of newer versions of screen).
+#
+re_chunks_type_005='^[[:space:]]*([^[:space:]].*)[[:space:]]{1,}()([(][^)]{1,}[)])[[:space:]]*$'
+
+# Matches:
+#             28189.screen-wrappers-hacking   (06/22/2016 06:49:18 PM)        (Attached)
+#
+re_chunks_type_010='^[[:space:]]*([^[:space:]].*)[[:space:]]{1,}([(][^)]{1,}[)])[[:space:]]{1,}([(][^)]{1,}[)])[[:space:]]*$'
+
+# This will be assigned to a regex captures the three fields of interest. The
+# first time through one of the below two loops we will have to try various
+# flavors of the regex, but once we've identified the type of 'screen -ls'
+# output that we are dealing with we use the correct regex directly.
+#
+re_chunks=
+
+if $opt_show_long; then
 
     "${PROG_SCREEN}" -ls "${ARGS_FOR_SCREEN[@]}" \
     | tail -n +2 \
     | head -n -2 \
     | $chop_pid_command \
-    | while read line; do
-          #        
+    | while read -r line; do
+
+          : $PROG \(trace: $LINENO\): line: "$line"
+
+          if test -z "${re_chunks}"; then
+
+              # CAREFUL: Order of the regex tests is important
+              #
+              if   [[ "$line" =~ $re_chunks_type_010 ]]; then
+                  re_chunks=$re_chunks_type_010
+
+              elif [[ "$line" =~ $re_chunks_type_005 ]]; then
+                  re_chunks=$re_chunks_type_005
+
+              else
+                  printf "${PROG} (error): unrecognized output from 'screen -ls':\n    \"%s\"\nBailing out\n" "$line" 1>&2
+                  exit 1
+              fi
+          else
+              if [[ "$line" =~ $re_chunks ]]; then :; else
+                  printf "${PROG} (error): unrecognized output from 'screen -ls':\n    \"%s\"\nBailing out\n" "$line" 1>&2
+                  exit 1
+              fi
+          fi
+
+          t_session_name=${BASH_REMATCH[1]}   # may contain spaces
+          t_session_date=${BASH_REMATCH[2]}   # will be empty if output is from an older version of screen
+          t_session_state=${BASH_REMATCH[3]}  # '(Attached)', '(Detached)', ...
+
           # Recall that 0x1f is the ASCII "unit separator" character; used
           # here because it is exceedingly unlikely to appear in the output of
           # 'screen -ls'. That is the hope, at least...
@@ -599,9 +658,6 @@ if $opt_show_long; then
           # it to definitively distinguish which values belong in which
           # column.
           #
-          t_session_name="$( echo "${line}" | sed -e 's#'${re_sed_l_chunks}'#\1#')"  # may contain spaces
-          t_session_date="$( echo "${line}" | sed -e 's#'${re_sed_l_chunks}'#\2#')"
-          t_session_state="$(echo "${line}" | sed -e 's#'${re_sed_l_chunks}'#\3#')"  # '(Attached)', '(Detached)', ...
           printf '%s%s%s%s%s%s\n' \
               "${t_session_name}"  $'\x1f' \
               "${t_session_date}"  $'\x1f' \
@@ -630,9 +686,10 @@ if $opt_show_long; then
     test ${t_estat_arr[2]} -eq 0 &&  # head
     test ${t_estat_arr[3]} -eq 0 &&  # $chop_pid_command
     test ${t_estat_arr[4]} -eq 0 &&  # while loop
-    test ${t_estat_arr[5]} -eq 0 ||  # ${PROG_COLUMN}
+    test ${t_estat_arr[5]} -eq 0 &&  # $maybe_sort_command
+    test ${t_estat_arr[6]} -eq 0 ||  # ${PROG_COLUMN}
     {
-        printf "${PROG} (error): was error while processing output of 'screen -ls' command; PIPESTATUS: %s %s %s %s %s; bailing out\n" "${t_estat_arr[@]}" 1>&2
+        printf "${PROG} (error): was error while processing output of 'screen -ls' command; PIPESTATUS: %s %s %s %s %s %s; bailing out\n" "${t_estat_arr[@]}" 1>&2
         exit 1
     }
 
@@ -646,7 +703,37 @@ else
     "${PROG_SCREEN}" -ls "${ARGS_FOR_SCREEN[@]}" \
     | grep '^[[:space:]]\{1,\}[^[:space:]]'      \
     | $chop_pid_command \
-    | sed -n -e 's#^[[:space:]]*\(.\{1,\}\)\([[:space:]]\{1,\}[(][^)]\{1,\}[)]\)\{2\}[[:space:]]*$#\1#p' \
+    | while read -r line; do
+
+          : $PROG \(trace: $LINENO\): line: "$line"
+
+          if test -z "${re_chunks}"; then
+
+              # CAREFUL: Order of the regex tests is important
+              #
+              if   [[ "$line" =~ $re_chunks_type_010 ]]; then
+                  re_chunks=$re_chunks_type_010
+
+              elif [[ "$line" =~ $re_chunks_type_005 ]]; then
+                  re_chunks=$re_chunks_type_005
+
+              else
+                  printf "${PROG} (error): unrecognized output from 'screen -ls':\n    \"%s\"\nBailing out\n" "$line" 1>&2
+                  exit 1
+              fi
+          else
+              if [[ "$line" =~ $re_chunks ]]; then :; else
+                  printf "${PROG} (error): unrecognized output from 'screen -ls':\n    \"%s\"\nBailing out\n" "$line" 1>&2
+                  exit 1
+              fi
+          fi
+
+          t_session_name=${BASH_REMATCH[1]}   # may contain spaces
+          # t_session_date=${BASH_REMATCH[2]}   # will be empty if output is from an older version of screen
+          # t_session_state=${BASH_REMATCH[3]}  # '(Attached)', '(Detached)', ...
+
+          printf '%s\n' "${t_session_name}"
+      done \
     | $maybe_sort_command
 
     # See notes above on why we can't use bash's 'pipefail' option, etc.
@@ -655,10 +742,10 @@ else
 
     test ${t_estat_arr[0]} -eq ${SCREEN_LS_ESTAT} &&  # screen prior to 4.3.0 emits 1; later versions emit 0 (as expected). We'll work with either.
 
-    test ${t_estat_arr[1]} -eq 0 &&  # tail
-    test ${t_estat_arr[2]} -eq 0 &&  # head
-    test ${t_estat_arr[3]} -eq 0 &&  # $chop_pid_command
-    test ${t_estat_arr[4]} -eq 0 ||  # sed
+    test ${t_estat_arr[1]} -eq 0 &&  # grep
+    test ${t_estat_arr[2]} -eq 0 &&  # $chop_pid_command
+    test ${t_estat_arr[3]} -eq 0 &&  # while loop
+    test ${t_estat_arr[4]} -eq 0 ||  # $maybe_sort_command
     {
         printf "${PROG} (error): was error while processing output of 'screen -ls' command; PIPESTATUS: %s %s %s %s %s; bailing out\n" "${t_estat_arr[@]}" 1>&2
         exit 1
