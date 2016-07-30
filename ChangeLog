@@ -3,7 +3,9 @@
 	* NEWS: created empty news section for future 0.3.3 release
 	* configure.ac: set version to 0.3.3-snapshot for next dev cycle
 	* configure: regenerated
-	* README.md: referenced version 0.3.2 as "latest", etc
+	* README.md:
+	- referenced version 0.3.2 as "latest", etc
+	- removed obsolete info about screen-wrappers working with bash < 4.x
 
 
 	RELEASED screen-wrappers 0.3.2

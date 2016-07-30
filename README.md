@@ -61,12 +61,13 @@ prerequisites as they should be present on any modern Unix or GNU/Linux system
 
 The `'screen-ls'` program (and possibly other tools in the `'screen-wrappers'`
 project) is implemented in Bash (a Bourne shell derivative). The
-'screen-wrappers' project was developed and tested using Bash 4.2.37, but uses
-only long-standing bash features; it should probably work with Bash 3.x and
-any later versions, as well. It may even work with Bash 2.x; the author would
-appreciate hearing about any successes or failures in this area. In the
-unlikely event that your system does not already have bash installed, it can
-be obtained from the project's site:
+'screen-wrappers' project was developed and tested using Bash versions 4.2.37
+and 4.3.30. It uses associative arrays which were added in Bash 4.0, so you'll
+need a 4.x version or newer; the `'configure'` script will check for this and
+exit with an error message if a new enough version of Bash is not found. The
+author would appreciate hearing about any successes or failures with other
+versions of Bash. In the unlikely event that your system does not already have
+bash installed, it can be obtained from the project's site:
 
    * http://www.gnu.org/software/bash/
 
