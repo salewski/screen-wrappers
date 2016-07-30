@@ -1,5 +1,10 @@
 2016-07-30  Alan D. Salewski  <salewski@att.net>
 
+	[github issue #6]:
+	* configure.ac (BASH_SH): now invoked at configure time to check
+	for bash 4.x or newer
+	* NEWS: noted above change
+
 	[github issue #7]:
 	* src/main/bash/bin/screen-ls.in ($re_sed_l_chunks): removed
 	($re_chunks_type_005): new variable; regex that matches the output

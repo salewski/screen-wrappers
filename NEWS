@@ -14,6 +14,28 @@ fixed will be noted here, as well.
 
 ** fixes
 
+*** issue #6: configure now checks for bash 4.x or newer
+
+    https://github.com/salewski/screen-wrappers/issues/6
+
+    The 'screen-ls' program uses associative arrays, which were introduced in
+    bash-4.0. The 'configure' was previously checking for the presence of
+    bash, but did not check for any particular version. The consequence was
+    that it was possible to build a version of the program that did not work
+    at runtime if installing on a host that only has bash 3.x (yes, the author
+    came across such a thing in the wild).
+
+    The 'configure' script now checks that the found version of bash is at
+    major version 4 or newer, and bombs out with an error message if that is
+    not the case.
+
+    If you have multiple versions of bash installed on your machine, you can
+    tell 'configure' where to find the one you want to use by specifying the
+    'BASH_SH' variable on the 'configure' command line like this:
+
+    :    $ ./configure --prefix=/path/to/wherever BASH_SH=/path/to/your/bash-4
+
+
 *** issue #7: screen-ls no longer swallows output of old versions of screen
 
     https://github.com/salewski/screen-wrappers/issues/7
