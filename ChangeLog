@@ -1,5 +1,7 @@
 2016-07-30  Alan D. Salewski  <salewski@att.net>
 
+	* src/main/bash/bin/screen-ls.in: tweak comment in opt processing for ':'
+
 	* NEWS: created empty news section for future 0.3.3 release
 	* configure.ac: set version to 0.3.3-snapshot for next dev cycle
 	* configure: regenerated
