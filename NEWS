@@ -14,6 +14,16 @@ fixed will be noted here, as well.
 
 ** fixes
 
+*** issue #8: autotools/missing and friends updated
+
+    https://github.com/salewski/screen-wrappers/issues/8
+
+    This prevents these configure-time warnings:
+
+    :    /path/to/screen-wrappers/autotools/missing: Unknown `--is-lightweight' option
+    :    Try `/path/to/screen-wrappers/autotools/missing --help' for more information
+    :    configure: WARNING: 'missing' script is too old or missing
+
 *** issue #6: configure now checks for bash 4.x or newer
 
     https://github.com/salewski/screen-wrappers/issues/6

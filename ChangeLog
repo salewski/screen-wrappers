@@ -1,5 +1,11 @@
 2016-07-30  Alan D. Salewski  <salewski@att.net>
 
+	[github issue #8]:
+	* autotools/install-sh: new upstream version of file
+	* autotools/missing: new upstream version of file
+	* NEWS: noted above change
+	* configure: regenerated
+
 	[github issue #6]:
 	* configure.ac (BASH_SH): now invoked at configure time to check
 	for bash 4.x or newer

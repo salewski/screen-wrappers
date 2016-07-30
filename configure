@@ -2358,7 +2358,10 @@ $as_echo "no, using $LN_S" >&6; }
 fi
 
 
-## XXX: We need bash >= 2.x; maybe beef this up a bit to verify.
+## We need bash >= 4.x (associative arrays were added in bash-4.0)
+## See also: GitHub issue #6:
+##     https://github.com/salewski/screen-wrappers/issues/6
+##
 # Extract the first word of "bash", so it can be a program name with args.
 set dummy bash; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
@@ -2399,9 +2402,15 @@ $as_echo "no" >&6; }
 fi
 
 
-if test -z "$BASH_SH"; then
-    as_fn_error $? "bash not found" "$LINENO" 5
+if test -z "$BASH_SH"; then :
+  as_fn_error $? "bash not found" "$LINENO" 5
+elif "${BASH_SH}" -c 'test -n "${BASH_VERSINFO[0]:+set}" && test ${BASH_VERSINFO[0]} -ge 4 && exit 0'; then :
+  :
+else
+  as_fn_error $? "found version of bash is not new enough; bash 4.0 or newer is required" "$LINENO" 5
+
 fi
+
 
 # Extract the first word of "cat", so it can be a program name with args.
 set dummy cat; ac_word=$2
