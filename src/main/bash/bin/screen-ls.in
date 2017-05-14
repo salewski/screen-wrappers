@@ -1,7 +1,7 @@
 #! @BASH_SH@ -
 # @configure_input@
 #
-# Copyright (C) 2013, 2016 Alan D. Salewski <salewski@att.net>
+# Copyright (C) 2013, 2016, 2017 Alan D. Salewski <salewski@att.net>
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@
 
 declare -r PROG='screen-ls'
 
-declare -r COPYRIGHT_DATES='2013, 2016'
+declare -r COPYRIGHT_DATES='2013, 2016, 2017'
 
 declare -r gl_maintainer_addr='@DFLT_MAINTAINER@'  # filtered in at build time
 
@@ -697,7 +697,7 @@ if $opt_show_long; then
 
 else
 
-    # Note that our sed regex below keeps all tokens of the session name (it
+    # Note that our bash regexen below keep all tokens of the session name (it
     # may contain spaces; see notes above) by definitively matching the date
     # and session state tokens at the end of each line of 'screen -ls' output,
     # and then keeping everything that appears in front of them.
@@ -1051,7 +1051,7 @@ Written by Alan D. Salewski <salewski@att.net>.
 =cut
 
 # Copyright symbol gets munged by pod2man(1), so we'll fall back on using '(C)'
-# Copyright © 2013, 2016 Alan D. Salewski <salewski@att.net>
+# Copyright © 2013, 2016, 2017 Alan D. Salewski <salewski@att.net>
 
 =pod 
 
