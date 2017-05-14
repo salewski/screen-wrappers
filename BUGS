@@ -1,15 +1,23 @@
 This is the 'BUGS' file for the 'screen-wrappers' project.
 
-Please send all bug reports to Alan D. Salewski <salewski@att.net>
+The preferred way to report bugs (and suggest new features) is via the GitHub
+issues page for the project:
 
-Note that some of the programs, modules, or whatever in the 'screen-wrappers'
-project, (when run with a '-h' or '--help' switch, for instance, or when
-viewing their documentation), may indicate that bug reports should be sent to
-a particular email address. Where that email address differs from the one
-above, you may be better off sending the bug to the address recommended by the
-program; however, in such a case, the guidelines below may still be of
-interest as they indicate the type of information that is helpful to the
-developer.
+    https://github.com/salewski/screen-wrappers/issues/
+
+On that page, simply click on the "New issue" button and then type in the
+issue description as described below.
+
+Alternatively, you can also send bug reports to the author via email at:
+
+    salewski@att.net
+
+Be sure to indicate 'screen-wrappers' in the email subject line.
+
+Please note that the author confesses to being hopelessly behind his email and
+under-motivated to rectify the situation. He does read all of it eventually,
+but it might be years before he sees your message and longer still before he
+decides whether or not to act on it.
 
 When reporting a bug, please include as much information as possible,
 including (but not limited to):
