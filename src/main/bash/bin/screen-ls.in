@@ -61,6 +61,12 @@ declare opt_show_long=false       # Dflt; override via the -l switch
 declare opt_show_pid=false        # Dflt; override via the -p switch
 declare opt_show_sorted=true      # Dflt; override via the -U switch
 
+# This gets set from f_is_screen_4_dot_3_or_newer()
+#
+# FIXME: Create function to set this explicitly, and then use the value set as
+#        a parameter to f_is_screen_4_dot_3_or_newer()
+#
+declare SCREEN_VERSION_STRING=
 
 declare -a F_CLEANUP_HOOK_NAMES=()
 
@@ -204,6 +210,9 @@ f_is_screen_4_dot_3_or_newer () {
     if test $? -ne 0; then
         return 1  # error
     fi
+
+    # FIXME: Pass this value in as a parameter
+    SCREEN_VERSION_STRING=${__t_screen_version_number_snippet}
 
     local __t_local_major
     local __t_local_minor
@@ -557,18 +566,78 @@ fi
 # We want to work with either version, though, so we'll dynamically test the
 # major.minor version numbers and adjust our behavior accordingly.
 #
+# FIXME: go (need an invocation in the current process to set SCREEN_VERSION_STRING)
+f_is_screen_4_dot_3_or_newer "${PROG_SCREEN}" > /dev/null
+if test $? -ne 0; then
+    printf "${PROG} (error): was unable to set the version string for the available GNU screen program: \"%s\"; bailing out\n" \
+           "${PROG_SCREEN}" 1>&2
+    exit 1
+fi
+# FIXME: end
 have_screen_4_dot_3_or_newer=$(f_is_screen_4_dot_3_or_newer "${PROG_SCREEN}")
 if test $? -ne 0; then
     printf "${PROG} (error): was unable to obtain the version of the available GNU screen program: \"%s\"; bailing out\n" \
            "${PROG_SCREEN}" 1>&2
     exit 1
 fi
-
+#
+# CAREFUL: The value of SCREEN_LS_ESTAT should match the value here only when
+#          'screen -ls' is invoked and there is a matching socket (that, only
+#          when there is one or more existing screen sessions).
+#
+#          When 'screen -ls' is invoked and there are no existing screen
+#          sessions, the expected exit status is 1 for all versions of screen
+#          the author has tested.
+#
+#          Note, too, that the '-q' option changes the meanings of the exit
+#          status codes; see screen(1) and comments elsewhere in this file for
+#          more info on that.
+#
 if $have_screen_4_dot_3_or_newer; then
     SCREEN_LS_ESTAT=0
 else
     SCREEN_LS_ESTAT=1
 fi
+
+# From screen(1)  [screen version 4.00.03 (FAU) 23-Oct-06]:
+# <quote>
+#      -q   Suppress printing of error messages. In combination with "-ls" the
+#           exit  value  is  as  follows: 9 indicates a directory without ses-
+#           sions. 10 indicates a directory with running  but  not  attachable
+#           sessions.  11 (or more) indicates 1 (or more) usable sessions.  In
+#           combination with "-r" the exit value is as follows:  10  indicates
+#           that  there  is  no session to resume. 12 (or more) indicates that
+#           there are 2 (or more) sessions to resume and  you  should  specify
+#           which one to choose.  In all other cases "-q" has no effect.
+# </quote>
+#
+# [Note that the man page text for the option remains identical to the above
+# as of screen version 4.05.00 (GNU) 10-Dec-16]
+#
+# That means that if we are careful, we can use the exit status directly to
+# determine whether or not the user has any screen sessions:
+#
+#         9 means "no screen sessions"
+#
+#    10-125 means "at least one session" (bash(1) (section "EXIT STATUS")
+#           documents special use of exit statuses greater than 125, so we
+#           will only consider values greater than 10 but less than 125 as
+#           having been produced directly by 'screen'. Note that we are only
+#           concerned with the presence or non-presence of screen sessions;
+#           this program does not care whether or not the sessions are usable
+#           or resumable. If there are screen sessions present, we will report
+#           on their presence.
+#
+declare -r -i SCREEN_Q_LS_ESTAT_NO_SCREEN_SESSIONS=9
+# declare -r -i SCREEN_Q_LS_ESTAT_SCREEN_SESSIONS_PRESENT_MIN=10
+declare -r -i SCREEN_Q_LS_ESTAT_SCREEN_SESSIONS_PRESENT_MAX=125
+#
+#
+# The layout of the 'screen -q -ls' exit status codes allows us to consider a
+# solid range of values as indicating command invocation "success":
+declare -r -i SCREEN_Q_LS_ESTAT_SUCCESS_MIN=${SCREEN_Q_LS_ESTAT_NO_SCREEN_SESSIONS}
+declare -r -i SCREEN_Q_LS_ESTAT_SUCCESS_MAX=${SCREEN_Q_LS_ESTAT_SCREEN_SESSIONS_PRESENT_MAX}
+
 
 # GitHub issue #7 note: Different versions of 'screen' produce different
 # output, so our regexen below try to be flexible enough to accommodate all of
@@ -606,9 +675,171 @@ re_chunks_type_010='^[[:space:]]*([^[:space:]].*)[[:space:]]{1,}([(][^)]{1,}[)])
 #
 re_chunks=
 
+
+# When running 'screen -ls', the first line of output on stdout (when there
+# are no active screen sessions) will have this form:
+#
+#     No Sockets found in /run/screen/S-${USER}.
+#
+re_no_sockets_found_loose='No[[:space:]]{1,}Sockets[[:space:]]{1,}found'
+re_no_sockets_found_tight='^'"${re_no_sockets_found_loose}"
+
+
+
+# The user would have to have a really pathological situation for the output
+# from 'screen -ls' to be large enough that we could not easily hold it all in
+# memory (if that describes you, though, then let the author know!).
+#
+# CAREFUL: Empirical testing (on screen version 4.00.03 (FAU) 23-Oct-06 and
+#          screen version 4.05.00 (GNU) 10-Dec-16) reveals that the '-q'
+#          option must come first for screen to exhibit the desired behavior
+#          of exiting with meaningful exit statuses when combined with the
+#          '-ls' option. In the author's testing, specifying the '-q' option
+#          second causes screen to exit with status 1 and otherwise behave in
+#          unexpected (and obviously incorrect) ways.
+#
+DATA_SCREEN_Q_LS_OUTPUT=$("${PROG_SCREEN}" -q -ls "${ARGS_FOR_SCREEN[@]}")
+t_screen_q_ls_estat=$?
+
+# Per the commentary above, we are expecting the 'screen -q -ls' exit status
+# to be within a range of values (between 9 and 125) for any type of
+# successful outcome.
+if test ${t_screen_q_ls_estat} -lt ${SCREEN_Q_LS_ESTAT_SUCCESS_MIN} \
+|| test ${t_screen_q_ls_estat} -gt ${SCREEN_Q_LS_ESTAT_SUCCESS_MAX}; then
+
+    printf "${PROG} (error): was unable to execute 'screen -q -ls' (exit status was %d): bailing out\n" ${t_screen_q_ls_estat} 1>&2
+
+    exit 1  # explicitly exit with status 1 (rather than ${SCREEN_Q_LS_ESTAT}
+            # itself, as there is a non-zero chance that some future change in
+            # screen behavior would cause it to exit with status zero here).
+fi
+
+: $PROG \(trace: $LINENO\): testing 'screen -q -ls' exit status \(${t_screen_q_ls_estat}\) against SCREEN_Q_LS_ESTAT_NO_SCREEN_SESSIONS \(${SCREEN_Q_LS_ESTAT_NO_SCREEN_SESSIONS}\)
+if test ${t_screen_q_ls_estat} -eq ${SCREEN_Q_LS_ESTAT_NO_SCREEN_SESSIONS}; then
+
+    : $PROG \(trace: $LINENO\): exit status of 'screen -q -ls' \(${t_screen_q_ls_estat}\) indicates that there are no existing screen sessions
+
+    if $gl_be_verbose; then
+        printf "${PROG} (info): no screen sessions exist (okay); exiting early with success status (no work left to do)\n" 1>&2
+    fi
+
+    exit 0
+fi
+
+unset t_screen_q_ls_estat
+
+
+# If we are falling through here then we think there is one or more screen
+# sessions to show the user. We will collect the output from 'screen -ls' and
+# parse it to show the appropriate data to the end user.
+#
+# Note that there is an inherent race condition between our two invocations of
+# 'screen' (our above 'screen -q -ls' invocation and our below 'screen -ls'
+# invocation). We try to paper over any issues (e.g., all screen sessions
+# having gone away) by parsing for the "no screen sessions available"
+# scenario, even though we accounted for that in a more direct way above.
+
+
+DATA_SCREEN_LS_OUTPUT=$("${PROG_SCREEN}" -ls "${ARGS_FOR_SCREEN[@]}")
+t_screen_ls_estat=$?
+# if test ${t_screen_ls_estat} -ne ${SCREEN_LS_ESTAT}; then  # screen prior to 4.3.0 exits with status 1; later versions exit with status 0 (as expected). We'll work with either.
+if test ${t_screen_ls_estat} -ne 0 \
+&& test ${t_screen_ls_estat} -ne 1; then  # screen prior to 4.3.0 exits with status 1; later versions exit with status 0 (as expected). We'll work with either.
+
+    printf "${PROG} (error): was unable to execute 'screen -ls': bailing out\n"  1>&2
+    exit 1
+fi
+
+
+# XXX: It is conceivable that some future version of screen(1) might emit no
+#      output for 'screen -ls' when the user has no screen sessions, but that
+#      is not the case currently. This check will help us detect such behavior
+#      changes and give us direct feedback about it (so the author can adjust
+#      the behavior of this program accordingly). For the foreseeable future,
+#      this should never happen...
+if test -z "${DATA_SCREEN_LS_OUTPUT}"; then
+    printf "${PROG} (BUG?): 'screen -ls' exited successfully, but produced no output (???): bailing out\n"  1>&2
+    exit 1
+fi
+
+# We do the following check in two steps even though it could more efficiently
+# be performed in one. The idea is that trace-level debugging will help us
+# detect future behavior changes in which legit "No Sockets found" messages
+# appear someplace other than anchored to the beginning of the first line of
+# stdout.
+#
+if [[ "${DATA_SCREEN_LS_OUTPUT}" =~ $re_no_sockets_found_loose ]]; then
+
+    # A "No Sockets found" type of string was found in the output of the
+    # 'screen -ls' command, but we do not yet know whether or not it is
+    # indicative of an unfortunate screen session name (see below comments) or
+    # a legit scenario in which the user simply does not have any screen
+    # sessions active.
+    #
+    # Even if the user does something pathological such as:
+    #
+    #     $ screen -S 'No Sockets found'
+    #
+    # the output of 'screen -ls' is expected to be such that the screen
+    # session names are /not/ named on the first line of its output:
+    #
+    #     $ screen -ls
+    #     There are screens on:
+    #             19185.No Sockets found  (05/14/2017 12:35:33 PM)        (Attached)
+    #
+    # We should therefore be safe checking for the "No Sockets found" type of
+    # message on the first line and using that to differentiate between the
+    # two scenarios.
+    #
+    : $PROG \(trace: $LINENO\): checking for "No Sockets found" type of message on first line of 'screen -ls' output.
+
+    t_first_line=$( builtin echo "${DATA_SCREEN_LS_OUTPUT}" | head -n 1)
+    if test $? -ne 0; then
+        printf "${PROG} (error): was unable to isolate first line of 'screen -ls' output: bailing out\n"  1>&2
+        exit 1
+    fi
+
+    if [[ "${t_first_line}" =~ $re_no_sockets_found_tight ]]; then
+
+        # Sanity check: Both old (4.3.0) and newer (4.5.0) versions of screen
+        # exit with status 1 for 'screen -ls' when there are no screen
+        # sessions available. If this changes, we want to know about it as it
+        # might invalidate some of the decisions made by this program.
+        if test ${t_screen_ls_estat} -ne 1; then
+            printf "${PROG} (warning) 'screen -ls' indicates no screen sessions, but exited with status %d (expected status 1); continuing anyway\n" "${t_screen_ls_estat}" 1>&2
+            # Keep going...
+        fi
+
+        : $PROG \(trace: $LINENO\): output text of 'screen -ls' \(${t_screen_ls_estat}\) indicates that there are no existing screen sessions
+
+        if $gl_be_verbose; then
+            printf "${PROG} (info): no screen sessions exist (okay); exiting early with success status (no work left to do)\n" 1>&2
+        fi
+        exit 0
+    fi
+    unset t_first_line
+fi
+
+# If we are falling through here, we expect that there is at least one active
+# screen session. That means that ${t_screen_ls_estat} should match
+# ${SCREEN_LS_ESTAT}, too.
+#
+: $PROG \(trace: $LINENO\): expecting there is at least one active screen session\; checking t_screen_last_estat \(${t_screen_last_estat}\) against SCREEN_LS_ESTAT \(${SCREEN_LS_ESTAT}\)
+#
+if test ${t_screen_ls_estat} -ne ${SCREEN_LS_ESTAT}; then  # screen prior to 4.3.0 exits with status 1; later versions exit with status 0 (as expected). We'll work with either.
+
+    printf "${PROG} (error): detected existing screen sessions, but exit status of 'screen -ls' was %d (expected %d from installed screen version %s): bailing out\n" \
+           "${t_screen_ls_estat}"     \
+           "${SCREEN_LS_ESTAT}"       \
+           "${SCREEN_VERSION_STRING}" \
+           1>&2
+    exit 1
+fi
+unset t_screen_ls_estat
+
 if $opt_show_long; then
 
-    "${PROG_SCREEN}" -ls "${ARGS_FOR_SCREEN[@]}" \
+    builtin echo "${DATA_SCREEN_LS_OUTPUT}" \
     | tail -n +2 \
     | head -n -2 \
     | $chop_pid_command \
@@ -682,8 +913,7 @@ if $opt_show_long; then
 
     declare -a t_estat_arr=( ${PIPESTATUS[@]} )
 
-    test ${t_estat_arr[0]} -eq ${SCREEN_LS_ESTAT} &&  # screen prior to 4.3.0 emits 1; later versions emit 0 (as expected). We'll work with either.
-
+    test ${t_estat_arr[0]} -eq 0 &&  # builtin echo
     test ${t_estat_arr[1]} -eq 0 &&  # tail
     test ${t_estat_arr[2]} -eq 0 &&  # head
     test ${t_estat_arr[3]} -eq 0 &&  # $chop_pid_command
@@ -702,8 +932,8 @@ else
     # and session state tokens at the end of each line of 'screen -ls' output,
     # and then keeping everything that appears in front of them.
 
-    "${PROG_SCREEN}" -ls "${ARGS_FOR_SCREEN[@]}" \
-    | grep '^[[:space:]]\{1,\}[^[:space:]]'      \
+    builtin echo "${DATA_SCREEN_LS_OUTPUT}" \
+    | grep '^[[:space:]]\{1,\}[^[:space:]]' \
     | $chop_pid_command \
     | while read -r line; do
 
@@ -721,12 +951,12 @@ else
 
               else
                   printf "${PROG} (error): unrecognized output from 'screen -ls':\n    \"%s\"\nBailing out\n" "$line" 1>&2
-                  exit 1
+                  exit 1  # from subshell
               fi
           else
               if [[ "$line" =~ $re_chunks ]]; then :; else
                   printf "${PROG} (error): unrecognized output from 'screen -ls':\n    \"%s\"\nBailing out\n" "$line" 1>&2
-                  exit 1
+                  exit 1  # from subshell
               fi
           fi
 
@@ -742,8 +972,7 @@ else
 
     declare -a t_estat_arr=( ${PIPESTATUS[@]} )
 
-    test ${t_estat_arr[0]} -eq ${SCREEN_LS_ESTAT} &&  # screen prior to 4.3.0 emits 1; later versions emit 0 (as expected). We'll work with either.
-
+    test ${t_estat_arr[0]} -eq 0 &&  # builtin echo
     test ${t_estat_arr[1]} -eq 0 &&  # grep
     test ${t_estat_arr[2]} -eq 0 &&  # $chop_pid_command
     test ${t_estat_arr[3]} -eq 0 &&  # while loop
@@ -1026,11 +1255,18 @@ Exits with 0 (zero) status on success, nonzero on error.
 
 =item *
 
-Internally checks that the exit status of C<screen -ls> is 1 because empirical
-testing reveals that that is the exit status returned even upon success
-(unless we were to add the C<-q> option, which would have the undesirable
-effect of suppressing the output we are trying to format). See comments in
-C<screen-ls> source code for more details.
+Internally checks that the exit status of C<screen -ls> is 1 when it detects
+that the underlying C<screen> version is older than C<4.0.3> (released
+2015-06-12, advertized as C<4.03.00> by C<screen --version>). Those older
+versions have a bug that causes the C<screen -ls> command to exit with status
+1 upon success even when existing screen sessions are detected.
+
+For info on the upstream bug see:
+
+    <http://savannah.gnu.org/bugs/?26750>
+
+See comments in C<screen-ls> source code for more details (HINT: grep for
+C<SCREEN_LS_ESTAT>).
 
 =back
 
@@ -1057,7 +1293,7 @@ Written by Alan D. Salewski <salewski@att.net>.
 
 =head1 COPYLEFT
 
-Copyright (C) 2013, 2016 Alan D. Salewski <salewski@att.net>
+Copyright (C) 2013, 2016, 2017 Alan D. Salewski <salewski@att.net>
 
 License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.

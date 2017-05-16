@@ -10,11 +10,58 @@ fixed will be noted here, as well.
 
 ------------------------------------------------------------------------------
 
-* screen-wrappers 0.3.3 (2016-??-??)
+* screen-wrappers 0.3.3 (2017-??-??)
 
 ** fixes
 
-   (none)
+*** issue #9: screen-ls: unable to parse zero-session output from GNU screen "4.02.01 (GNU) 28-Apr-14"
+
+    https://github.com/salewski/screen-wrappers/issues/9
+
+    Added logic to check exit status of 'screen -q -ls' prior to attempting to
+    parse the output of 'screen -ls'. This provides a more direct way of
+    detecting the "no screen sessions found" scenario because the '-q' option
+    causes screen to exit with status 9. The 'screen' exit statuses between 10
+    and 125 are treated as "one or more screen session found". The behavior of
+    exit status 10 and above is consistent with screen(1), which states:
+
+    #+BEGIN_QUOTE
+       -q   Suppress printing of error messages. In combination with "-ls" the
+            exit  value  is  as  follows: 9 indicates a directory without ses-
+            sions. 10 indicates a directory with running  but  not  attachable
+            sessions.  11 (or more) indicates 1 (or more) usable sessions.  In
+            combination with "-r" the exit value is as follows:  10  indicates
+            that  there  is  no session to resume. 12 (or more) indicates that
+            there are 2 (or more) sessions to resume and  you  should  specify
+            which one to choose.  In all other cases "-q" has no effect.
+    #+END_QUOTE
+
+    [The above taken from screen(1) as provided with screen version 4.00.03
+     (FAU) 23-Oct-06. Note that the man page text for the option remains
+     identical to the above as of screen version 4.05.00 (GNU) 10-Dec-16]
+
+     The limit of treating 125 as the highest exit status interpreted as
+     described above is due to the fact that bash uses values of 126 and
+     higher to indicate various abnormal exit conditions (killed by various
+     signals, etc.). For more on that, see the "EXIT STATUS" section of
+     bash(1).
+
+     Consistent with prior releases of the 'screen-wrappers' package, the
+     'screen-ls' program still exits with a zero (success) status if it was
+     able to complete its work successfully, regardless of whether any
+     existing screen sessions were found.
+
+     If verbose output has been enabled, then a message is printed to stderr
+     explaining the "no screen sessions found" scenario:
+ 
+     :     $ screen-ls
+     :     $ echo $?
+     :     0
+     :
+     :     $ screen-ls -v
+     :     screen-ls (info): no screen sessions exist (okay); exiting early with success status (no work left to do)
+     :     $ echo $?
+     :     0
 
 
 ** improvements
@@ -37,6 +84,7 @@ fixed will be noted here, as well.
     :    /path/to/screen-wrappers/autotools/missing: Unknown `--is-lightweight' option
     :    Try `/path/to/screen-wrappers/autotools/missing --help' for more information
     :    configure: WARNING: 'missing' script is too old or missing
+
 
 *** issue #6: configure now checks for bash 4.x or newer
 
