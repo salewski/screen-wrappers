@@ -26,7 +26,7 @@
 #
 # Any options not recognized by 'screen-ls' will be passed through to
 # 'screen'. You can explicitly stop 'screen-ls' options processing by using
-# the '--' psueo-option; all options after that will be passed through to
+# the '--' pseudo-option; all options after that will be passed through to
 # 'screen'.
 #
 # See screen-ls(1) for the full story (or run the 'perldoc' program on this
