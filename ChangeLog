@@ -1,3 +1,11 @@
+2017-05-14  Alan D. Salewski  <salewski@att.net>
+
+	* src/main/bash/bin/screen-ls.in:
+	- correct comment cruft (regexen are bash's, not sed's)
+	- updated copyright dates (add current year (2017))
+
+	* BUGS: direct user to project's GitHub issues page
+
 2016-07-30  Alan D. Salewski  <salewski@att.net>
 
 	* src/main/bash/bin/screen-ls.in: tweak comment in opt processing for ':'
