@@ -1,3 +1,22 @@
+2017-05-15  Alan D. Salewski  <salewski@att.net>
+
+	[github issue #9]:
+	* src/main/bash/bin/screen-ls.in (SCREEN_VERSION_STRING) new global variable
+	(f_is_screen_4_dot_3_or_newer): modified to set $SCREEN_VERSION_STRING (for now)
+	(SCREEN_Q_LS_ESTAT_NO_SCREEN_SESSIONS): new variable
+	(SCREEN_Q_LS_ESTAT_SCREEN_SESSIONS_PRESENT_MAX): new variable
+	(SCREEN_Q_LS_ESTAT_SUCCESS_MIN): new variable
+	(SCREEN_Q_LS_ESTAT_SUCCESS_MAX): new variable
+	(re_no_sockets_found_loose): new variable (regex)
+	(re_no_sockets_found_tight): new variable (regex)
+	(DATA_SCREEN_Q_LS_OUTPUT): new variable; captures output of 'screen -q -ls'
+	(t_screen_q_ls_estat): new variable; captures exit status of 'screen -q -ls'
+	(DATA_SCREEN_LS_OUTPUT): new variable; captures output of 'screen -ls'
+	(t_screen_ls_estat): new variable; captures exit status of 'screen -ls'
+	(t_first_line): new variable; used for testing content of first
+	line of output from 'screen -ls'
+	* NEWS: noted above change
+
 2017-05-14  Alan D. Salewski  <salewski@att.net>
 
 	* src/main/bash/bin/screen-ls.in:
