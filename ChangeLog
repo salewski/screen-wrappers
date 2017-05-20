@@ -1,3 +1,11 @@
+2017-05-19  Alan D. Salewski  <salewski@att.net>
+
+	* src/main/bash/bin/screen-ls.in (DATA_SCREEN_Q_LS_OUTPUT): remove
+	recently added variable; 'screen -q -ls' does not produce any
+	output on stdout, and there's no reason to confirm that it is empty
+	(DATA_SCREEN_LS_OUTPUT): restore comment about holding all
+	'screen	-ls' output in memory
+
 2017-05-15  Alan D. Salewski  <salewski@att.net>
 
 	[github issue #9]:
