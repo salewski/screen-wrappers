@@ -50,6 +50,29 @@ declare -r gl_const_build_date='@BUILD_DATE@'
 declare -r gl_const_release="${SCREEN_WRAPPERS_VERSION}  (built: ${gl_const_build_date})"
 
 
+# GitHub issue #11: Unset GREP_OPTIONS to make grep(1) behavior predictable.
+#
+# This only has an effect if the grep program in use is GNU grep; other grep
+# implementations did not recognize or alter their behavior based on the
+# 'GREP_OPTIONS' variable. GNU grep prior to version 2.11 (~2014-11) would
+# append values from this variable to the command line, which would make
+# behavior of our invocations in the current program unpredictable. Versions
+# of GNU grep 2.11 or newer no longer behave that way, but do emit a warning
+# on stderr about the change in behavior.
+#
+# Unsetting GREP_OPTIONS here has the effect of making our grep invocations
+# predictable (when older versions of GNU grep are in use) and also of
+# suppressing the spurious warning:
+#
+#     grep: warning: GREP_OPTIONS is deprecated; please use an alias or script
+#
+# when newer versions of GNU grep are in use.
+#
+# See: https://github.com/salewski/screen-wrappers/issues/11
+#
+unset GREP_OPTIONS
+
+
 declare -r PROG_SCREEN='@SCREEN@'  # GNU 'screen' command found at configure time
 
 declare -r PROG_COLUMN='@COLUMN@'  # BSD 'column' command found at configure time
