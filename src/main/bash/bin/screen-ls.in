@@ -1,7 +1,6 @@
-#! @BASH_SH@ -
 # @configure_input@
 #
-# Copyright (C) 2013, 2016, 2017 Alan D. Salewski <salewski@att.net>
+# Copyright (C) 2013, 2016, 2017, 2019 Alan D. Salewski <salewski@att.net>
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -35,9 +34,11 @@
 # Exit status will be zero upon success, non-zero upon error (invalid
 # arguments provided to this program, for example).
 
+set -o pipefail
+
 declare -r PROG='screen-ls'
 
-declare -r COPYRIGHT_DATES='2013, 2016, 2017'
+declare -r COPYRIGHT_DATES='2013, 2016, 2017, 2019'
 
 declare -r gl_maintainer_addr='@DFLT_MAINTAINER@'  # filtered in at build time
 
@@ -90,6 +91,39 @@ declare opt_show_sorted=true      # Dflt; override via the -U switch
 #        a parameter to f_is_screen_4_dot_3_or_newer()
 #
 declare SCREEN_VERSION_STRING=
+
+# Regex that matches strings that would be interpretted by bash as legitimate
+# identifiers /for assignment/. From the "DEFINITIONS" section of bash(1):
+#     ...
+#        word   A sequence of characters considered as a single unit by the
+#               shell. Also known as a token.
+#
+#        name   A word consisting only of alphanumeric characters and underscores,
+#               and beginning with an alphabetic character or an underscore.  Also
+#               referred to as an identifier.
+#     ...
+#
+# Note that $0 and $_ are "Special Parameters" and consequently may only be
+# referenced (assignment to special parameters is not allowed). We therefore
+# take special care to /not/ accept '0' and '_' as a legit identifiers for
+# assignment.
+#
+# "Positional Parameters" are denoted by one or more digits, other than the
+# single digit '0'. While they may be set using the 'set' builtin command,
+# they cannot be directly assigned to. We therefore take special care to /not/
+# accept sequences of /only/ digits as legit identifiers for assignment.
+#
+# If the identifier begins with an underscore, then it must contain one or
+# more other legit identifier characters, as well.
+#
+# If the identifier begins with an alphabetic character, then it can stand on
+# its own, or be followed by one or more other legit identifier characters.
+#
+# Legit identifiers cannot begin with numeric values.
+#
+# See: f_legit_bash_identifier_p(...)
+#
+declare -r RE_LEGIT_BASH_IDENTIFIER='^([_][_[:alnum:]]{1,}|[[:alpha:]][_[:alnum:]]{0,})$'
 
 declare -a F_CLEANUP_HOOK_NAMES=()
 
@@ -185,16 +219,805 @@ EOF
 }
 
 
-# Prints on stdout 'true' or 'false' to indicate whether or not the GNU screen
-# version being used is 4.3.0 or newer. The value can be captured by callers
-# and later used to invoke either the 'true' or 'false' commands.
+# Predicate that indicates whether or not the value provided by V_NAME could
+# be used as a bash identifier.
 #
-# The return status of the function will be 0 upon success (regardless of
-# whether 'true' or 'false' was printed to stdout), and non-zero upon error.
+# Note that this predicate checks only the structure of the value provided in
+# V_NAME; a successful return status DOES NOT assert that a variable with the
+# name specified by the value in V_NAME is actually known to exist.
 #
-# Callers must check the return status. A non-zero return status indicates an
-# unexpected processing error.
+# Note, too, that the checks performed are according to the bash(1)
+# documentation for a 'word' and a 'name'. When creating actual variables or
+# functions, bash does allow for the use of values outside of what is
+# considered legit here (e.g., functions with hyphens, periods, and/or colons
+# in their names). And parent processes that invoke bash can jam any old weird
+# thing into the environment of a bash subprocess).
+#
+# @param V_NAME (required) - The name to test
+#
+# @return 0 for TRUE, 1 for FALSE (so works with normal shell condition
+#         constructs that expect these values).
+#
+function f_legit_bash_identifier_p () {
 
+    local __t_required_count=1
+    if test $# -ne ${__t_required_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; exactly %d required; bailing out\n" \
+               $# ${__t_required_count} 1>&2
+        exit 1
+    fi
+    unset __t_required_count
+
+    local __t_variable_name  # name to test
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_variable_name' 1>&2
+        exit 1
+    fi
+
+    __t_variable_name=$1
+
+    # XXX: redundant with the next test; consider deleting...
+    if [[ ${__t_variable_name} =~ ^[[:space:]]*$ ]]; then
+        : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): value provided for V_NAME argument is blank, so is not a legit bash identifier
+        return 1  # false
+    fi
+
+    if [[ ${__t_variable_name} =~ ${RE_LEGIT_BASH_IDENTIFIER} ]]; then :; else
+        : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): value provided for V_NAME argument is not a legit bash identifier
+        return 1  # false
+    fi
+
+    return 0  # true
+}
+
+
+# Helper function for 'f_*legit_global_assoc_ary_bash_identifer_p'
+# predicates. All invocations indicate whether or not the variable named by
+# V_NAME is a globally defined associative array (e.g. created via 'declare -A ...').
+#
+# Optionally (based on the value provided for the required ATTRS param)
+# performs additional checks on the attributes of the array (such as whether
+# or not it was declared as readonly).
+#
+# @param V_NAME (required) - The name to test
+#
+# @param ATTRS  (required) - Valid values include 'READ-ONLY', 'READ-WRITE', and 'ANY'.
+#
+# @return 0 ("true") or 1 ("false") to indicate whether or not the requested
+#         criteria were satisfied.
+#
+#         If any processing errors are encountered, does not return;it instead
+#         exits with an error code.
+#
+# See also:
+#     f_legit_bash_identifier_p( V_NAME)
+#
+#     f_writable_legit_global_assoc_ary_bash_identifier( V_NAME )
+#     f_readonly_legit_global_assoc_ary_bash_identifier( V_NAME )
+#
+function __f_legit_global_assoc_ary_bash_identifier_helper_or_die () {
+
+    # XXX: Maybe make ATTRS an optional argument, and use 'ANY' as the default.
+    local __t_required_count=2
+    if test $# -ne ${__t_required_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; exactly %d required; bailing out\n" \
+               $# ${__t_required_count} 1>&2
+        exit 1
+    fi
+    unset __t_required_count
+
+    local __t_variable_name  # name to test
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_variable_name' 1>&2
+        exit 1
+    fi
+
+    __t_variable_name=$1
+
+    local -a __t_all_legit_wanted_attrs=( 'READ-ONLY' 'READ-WRITE' 'ANY' )
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_all_legit_wanted_attrs' 1>&2
+        exit 1
+    fi
+    local -r __t_all_legit_wanted_attrs
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable \"%s\" as read-only; bailing out\n" '__t_all_legit_wanted_attrs' 1>&2
+        exit 1
+    fi
+
+    local __t_wanted_attr
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_wanted_attr' 1>&2
+        exit 1
+    fi
+
+    __t_wanted_attr=$2
+    local __t_wanted_attr_is_legit=false
+    for __t_one_legit_attr in "${__t_all_legit_wanted_attrs[@]}"; do
+
+        if test "${__t_one_legit_attr}" = "${__t_wanted_attr}"; then
+            __t_wanted_attr_is_legit=true
+            break
+        fi
+    done
+
+    if ${__t_wanted_attr_is_legit}; then :; else
+        printf "${PROG} (BUG): ${FUNCNAME}(): unrecognized value (\"%s\") provided for required ATTRS param; bailing out\n" \
+               "${__t_wanted_attr}" 1>&2
+        exit 1
+    fi
+
+    # Invocation is good; now get down to business...
+
+    if f_legit_bash_identifier_p "${__t_variable_name}"; then :; else
+        : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): value provided for V_NAME argument is not a legit bash identifier, so is not a legit global associative array identifier
+        return 1  # false
+    fi
+
+    local __t_variable_attrs
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_variable_attrs' 1>&2
+        exit 1
+    fi
+
+    # If the named variable is a pre-declared associative array, then the
+    # output of 'declare -p' on it will look something like:
+    #
+    #     declare -A FOO=()
+    #
+    # where the 'A' in the second field tells us that the name represents an
+    # associative array. In this example, if FOO were not an associative
+    # array, we would expect the 'declare -p' output to look something like
+    # this:
+    #
+    #     declare -- FOO
+    #
+    # However, if the variable named does not even exist, then our 'declare
+    # -p...' invocation would emit on stderr something like:
+    #
+    #     ...declare: SOME_VARIABLE_NAME: not found
+    #
+    # which is why we redirect stderr to /dev/null.
+    #
+    __t_variable_attrs=$(declare -g -p "${__t_variable_name}" 2>/dev/null | awk '{ print $2 }')
+
+    # XXX: Checks assume pipefail is enabled, and that 'declare' exit status
+    #      will be non-zero for a non-existant variable.
+    if test $? -eq 0 \
+    && test -z "${__t_variable_attrs}"; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to obtain the attributes of the variable named \"%s\"; bailing out\n" \
+               "${__t_variable_attrs}" 1>&2
+        exit 1
+    fi
+    case ${__t_variable_attrs} in
+        *A* )
+            : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): ${__t_variable_name} has been confirmed to be the name of a global associative array
+            ;;
+
+        * )
+            : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): ${__t_variable_name} is not a predefined global associative array
+            : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 1 \( "false" \)
+            return 1  # false
+            ;;
+    esac
+
+    case ${__t_wanted_attr} in
+        'ANY' )
+            # No additional attributes to check.
+            : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 0 \( "true" \)
+            return 0;  # true
+            ;;
+
+        'READ-ONLY')
+            case ${__t_variable_attrs} in
+                *r* )
+                    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): ${__t_variable_name} has been confirmed to have the readonly attribute set
+                    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 0 \( "true" \)
+                    return 0;  # true
+                    ;;
+
+                * )
+                    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): ${__t_variable_name} does not have the readonly attribute set
+                    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 1 \( "false" \)
+                    return 1  # false
+                    ;;
+            esac
+            ;;
+
+        'READ-WRITE')
+            case ${__t_variable_attrs} in
+                *r* )
+                    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): ${__t_variable_name} has been confirmed to have the readonly attribute set, but caller wants read-write
+                    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 1 \( "false" \)
+                    return 1;  # false
+                    ;;
+
+                * )
+                    # If it's not readonly then it is read/write...
+                    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): ${__t_variable_name} is read/write \( because it does not have the readonly attribute set \)
+                    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 0 \( "true" \)
+                    return 0  # true
+                    ;;
+            esac
+            ;;
+
+        * )
+            # Should never happen...
+            printf "${PROG} (BUG): ${FUNCNAME}(): unrecognized value for %s: \"%s\"; bailing out\n" \
+                   '__t_wanted_attr' \
+                   "${__t_wanted_attr}" 1>&2
+            exit 1
+            ;;
+    esac
+
+    printf "${PROG} (BUG): ${FUNCNAME}()[line: ${LINENO}]: should not fall through this line; bailing out\n" 1>&2
+    exit 1
+}
+
+
+# Predicate that indicates whether or not the variable named by V_NAME is a
+# globally defined associative array (e.g. created via 'declare -A ...').
+#
+# @param V_NAME (required) - The name to test
+#
+# See also:
+#     f_legit_bash_identifier_p( V_NAME)
+#
+#     f_legit_global_assoc_ary_bash_identifier_p( V_NAME )
+#
+#     f_writable_legit_global_assoc_ary_bash_identifier_p( V_NAME )
+#     f_readonly_legit_global_assoc_ary_bash_identifier_p( V_NAME )
+#
+function f_legit_global_assoc_ary_bash_identifier_p () {
+
+    local __t_required_count=1
+    if test $# -ne ${__t_required_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; exactly %d required; bailing out\n" \
+               $# ${__t_required_count} 1>&2
+        exit 1
+    fi
+    unset __t_required_count
+
+    if __f_legit_global_assoc_ary_bash_identifier_helper_or_die "$1" 'ANY'; then
+        : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 0 \( "true" \)
+        return 0;  # true
+    fi
+
+    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 1 \( "false" \)
+    return 1;  # false
+}
+
+# Predicate that indicates whether or not the variable named by V_NAME is a
+# globally defined associative array (e.g. created via 'declare -A ...') that
+# is read-only (that is, that has the readonly attribute set).
+#
+# @param V_NAME (required) - The name to test
+#
+# See also:
+#     f_legit_bash_identifier_p( V_NAME)
+#
+#     f_legit_global_assoc_ary_bash_identifier_p( V_NAME )
+#
+#     f_writable_legit_global_assoc_ary_bash_identifier_p( V_NAME )
+#
+function f_readonly_legit_global_assoc_ary_bash_identifier_p () {
+
+    local __t_required_count=1
+    if test $# -ne ${__t_required_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; exactly %d required; bailing out\n" \
+               $# ${__t_required_count} 1>&2
+        exit 1
+    fi
+    unset __t_required_count
+
+    if __f_legit_global_assoc_ary_bash_identifier_helper_or_die "$1" 'READ-ONLY'; then
+        : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 0 \( "true" \)
+        return 0;  # true
+    fi
+
+    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 1 \( "false" \)
+    return 1;  # false
+}
+
+
+# Predicate that indicates whether or not the variable named by V_NAME is a
+# globally defined associative array (e.g. created via 'declare -A ...') that
+# is writable (that is, that DOES NOT have the readonly attribute set).
+#
+# @param V_NAME (required) - The name to test
+#
+# See also:
+#     f_legit_bash_identifier_p( V_NAME)
+#
+#     f_legit_global_assoc_ary_bash_identifier_p( V_NAME )
+#
+#     f_writable_legit_global_assoc_ary_bash_identifier_p( V_NAME )
+#
+function f_writable_legit_global_assoc_ary_bash_identifier_p () {
+
+    local __t_required_count=1
+    if test $# -ne ${__t_required_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; exactly %d required; bailing out\n" \
+               $# ${__t_required_count} 1>&2
+        exit 1
+    fi
+    unset __t_required_count
+
+    if __f_legit_global_assoc_ary_bash_identifier_helper_or_die "$1" 'READ-WRITE'; then
+        : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 0 \( "true" \)
+        return 0;  # true
+    fi
+
+    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): predicate value: 1 \( "false" \)
+    return 1;  # false
+}
+
+
+# Helper function to store a given value (or nothing, if no value is provided)
+# to the variable named by V_NAME in the current shell.
+#
+# The idea is that callers invoke some function f_foo_func with the name of a
+# variable provided as a parameter, and such functions internally invoke this
+# one with both that name (V_NAME) and a value (VALUE) as a parameters. This
+# allows callers of other functions to obtain output values from those
+# functions without spawning a subshell. It allows one to replace variations
+# of this:
+#
+#     somevalue=$(somefunc arg1 arg2)
+#
+# with this:
+#
+#     somefunc somevalue arg1 arg2
+#     ...
+#     # do something with $somevalue
+#
+# Note that 'somevalue' (passed as the first argument to somefunc() in the
+# second example) is a string literal that names the variable that is to be
+# set in the current shell.
+#
+# This approach also allows foo_or_die(...) functions to behave as you would
+# want them to:
+#
+#    # wrong (exit status still needs to be checked and acted upon by the caller):
+#    somevalue=$(somefunc_or_die arg1 arg2)
+#    if test $? -ne 0; then ...; fi
+#
+#    # right (less verbose code needed at calling location):
+#    somefunc_or_die somevalue arg1 arg2
+#
+# @param V_NAME (required) - The name of the variable to set.
+#
+# @param VALUE  (optional) - The value to give to the variable named by V_NAME
+#
+# See also:
+#     f_set_named_index_array_or_die( V_NAME, ... )
+#     f_set_named_assoc_array_or_die( V_NAME, ... )
+#
+f_set_named_scalar_or_die () {
+
+    local __minimal_count=1
+    local __maximal_count=2
+    if test $# -lt ${__minimal_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; (at least) %d required; bailing out\n" \
+            $# ${__minimal_count} 1>&2
+        exit 1
+    fi
+    if test $# -gt ${__maximal_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; (at most) %d expected; bailing out\n" \
+            $# ${__maximal_count} 1>&2
+        exit 1
+    fi
+
+    local __variable_name
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__variable_name' 1>&2
+        exit 1
+    fi
+    __variable_name=$1
+
+    unset -v "${__variable_name}"
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() value provided for variable name (\"%s\") is not a valid identifier; bailing out\n" \
+               "${__variable_name}" 1>&2
+        exit 1
+    fi
+
+    # Using an array here allows us to use the magic "${__variable_value[@]}"
+    # syntax below, which will do what we want (expand to a quoted something
+    # if non-empty, else expand to nothing) regardless of whether or not a
+    # variable value was provided by the caller.
+    #
+    local -a __variable_value
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__variable_value' 1>&2
+        exit 1
+    fi
+
+    if test $# -gt 1; then
+        __variable_value+=( "$2" )
+    fi
+
+    printf -v "${__variable_name}" '%s' "${__variable_value[@]}"
+
+    if test $? -ne 0; then
+        printf "${PROG} (error): was unable to set the value of variable named \"%s\"; bailing out\n" "${__variable_name}" 1>&2
+        exit 1
+    fi
+
+    return 0  # success
+}
+
+
+# Similar to f_set_named_scalar_or_die(), but for setting associative arrays.
+#
+# CAREFUL: Uses 'eval' to set the key/value pairs on V_NAME_ARY_ASSOC; be sure
+#          to sanitize your arguments!
+#
+#     somevalue=$(somefunc key1 arg1 key2 arg2 ...)
+#
+# @param V_NAME_ARY_ASSOC (required) - The name of the associative array
+#                         variable to set. Must name an existing global assoc
+#                         array (must have already been created via 'declare -A ...'
+#                         by the caller).
+#
+# @param KEY_VAL_PAIRS  (optional) - Zero or more alternating keys/value pairs.
+#
+f_set_named_assoc_array_or_die () {
+
+    local __minimal_count=1
+    # no maximal count; we will accept an arbitrary number of key/value pairs (starting with none at all)
+
+    if test $# -lt ${__minimal_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; (at least) %d required; bailing out\n" \
+            $# ${__minimal_count} 1>&2
+        exit 1
+    fi
+
+    local __t_variable_name  # name of an output variable (an associative array)
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_variable_name' 1>&2
+        exit 1
+    fi
+
+    __t_variable_name=$1
+    shift
+
+    # FIXME: For symmetry with f_set_named_scalar_or_die(), maybe create the
+    #        global assoc array (declare -g -A ...) if it is found to have not
+    #        been predeclared.
+    #
+    if f_writable_legit_global_assoc_ary_bash_identifier_p "${__t_variable_name}"; then :; else
+        printf "${PROG} (BUG): ${FUNCNAME}(): value provided for V_NAME_ARY_ASSOC argument (\"%s\") is not a legit, writable global associative array identifier; bailing out\n" \
+               "${__t_variable_name}" 1>&2
+        exit 1
+    fi
+
+    local __t_key
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_key' 1>&2
+        exit 1
+    fi
+
+    # Using an array here allows us to use the magic "${__t_val[@]}" syntax
+    # below, which will do what we want (expand to a quoted something if
+    # non-empty, else expand to nothing) regardless of whether or not a
+    # variable value was provided by the caller.
+    #
+    local -a __t_val
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_val' 1>&2
+        exit 1
+    fi
+
+    while test $# -gt 0; do
+        __t_key=$1
+        shift
+
+        if test $# -gt 0; then
+            __t_val+=( "$1" )
+            shift
+        fi
+
+        # XXX: Using eval; make sure you've sanitized your params!
+        if test ${#__t_val[@]} -eq 0; then
+            eval "${__t_variable_name}[${__t_key}]="
+        else
+            eval "${__t_variable_name}[${__t_key}]=\"${__t_val[@]}\""
+        fi
+
+        if test $? -ne 0; then
+            printf "${PROG} (error): was unable to set the key '%s' of assoc array variable named \"%s\"; bailing out\n" \
+                   "${__t_key}" \
+                   "${__t_variable_name}" 1>&2
+            exit 1
+        fi
+
+        __t_val=()   # reset
+    done
+
+    return 0  # success
+}
+
+
+# This is not currently needed in this prog (but see f_set_named_scalar and f_set_named_assoc_array_or_die above):
+# f_set_named_index_array_or_die( V_NAME, ... )
+
+
+
+# Uses the provided FPATH_PROG_SCREEN (screen(1)) program to obtain the output
+# produced when invoked with its '--version' parameter, parsed here to obtain
+# just the version number field. The value thus obtained is then used to set
+# the variable named by the V_NAME parameter.
+#
+# If any errors are encountered (e.g., 'screen --version' cannot be invoked
+# for some reason), then exits with an error code.
+#
+# @param V_NAME (required) - The name of the variable to set (output variable).
+#
+# @param PROG_SCREEN (required) - The screen(1) executable to use (this allows
+#                                 us to avoid over-reliance on global variables)
+#
+f_obtain_screen_version_string_or_die () {
+
+    local __required_count=2
+    if test $# -ne ${__required_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; exactly %d required; bailing out\n" \
+               $# ${__required_count} 1>&2
+        exit 1
+    fi
+
+
+    local __t_variable_name        # name of an output variable
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_variable_name' 1>&2
+        exit 1
+    fi
+
+    __t_variable_name=$1
+
+    if [[ ${__t_variable_name} =~ ^[[:space:]]*$ ]]; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with blank value for required V_NAME param; bailing out\n" 1>&2
+        exit 1
+    fi
+
+    # FIXME: This is gross; use external function(s) to check variable attributes
+    unset -v "${__t_variable_name}"
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() value provided for variable name (\"%s\") is not a valid identifier; bailing out\n" \
+               "${__t_variable_name}" 1>&2
+        exit 1
+    fi
+
+
+    local __t_fpath_prog_screen
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_fpath_prog_screen' 1>&2
+        exit 1
+    fi
+
+    __t_fpath_prog_screen=$2
+
+    if [[ ${__t_fpath_prog_screen} =~ ^[[:space:]]*$ ]]; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with blank value for required FPATH_PROG_SCREEN param; bailing out\n" 1>&2
+        exit 1
+    fi
+
+
+    local __t_screen_version_number_snippet
+
+    # Examples of how GNU screen advertizes its version:
+    #
+    #     Screen version 4.00.03jw4 (FAU) 2-May-06
+    #     Screen version 4.03.01 (GNU) 28-Jun-15
+    #     Screen version 4.05.00 (GNU) 10-Dec-16
+
+    # XXX: This could fail on some mutant compilation of GNU screen
+    #
+    __t_screen_version_number_snippet=$( set -o pipefail;
+
+                                         # This pipeline will print the value we want to capture.
+                                         #
+                                         # Note that we start parsing at the first digit...
+                                         #
+                                         "${__t_fpath_prog_screen}" --version \
+                                           | head -n 1 \
+                                           | sed -n -e 's#^[^[:digit:].]\{1,\}\([[:alnum:]]\{1,\}[.][[:alnum:]]\{1,\}[.][[:alnum:]]\{1,\}\).*#\1#p';
+
+                                         # Some (all?) versions of screen will exit with status 1 when invoked with
+                                         # just the '--version' option, so we allow for that here...
+                                         #
+                                         declare -a pstat=( ${PIPESTATUS[@]} )
+                                         if test ${#pstat[@]} -eq 3 \
+                                         \
+                                         && test ${pstat[0]} -ge 0  \
+                                         && test ${pstat[0]} -le 1  \
+                                         \
+                                         && test ${pstat[1]} -eq 0  \
+                                         && test ${pstat[2]} -eq 0; then
+                                             # Condense all that down into a single "success" code
+                                             exit 0
+                                         fi
+                                         exit 1
+                                       )
+    if test $? -ne 0 \
+    || test -z "${__t_screen_version_number_snippet}"; then
+        printf "${PROG} (error): was unable to obtain output from 'screen --version'; bailing out\n" 1>&2
+        exit 1
+    fi
+
+    f_set_named_scalar_or_die "${__t_variable_name}" "${__t_screen_version_number_snippet}"
+
+    return 0;  # success
+}
+
+
+# Parses the output of 'screen --version' and stores the constituent parts in
+# raw form in the associative array named by the V_NAME_ARY_ASSOC_RAW param. A
+# "digits only" form is stored in the associative array named by the
+# V_NAME_ARY_ASSOC_NUM param (see below for details). The keys of both arrays
+# will be 'MAJOR', 'MINOR', and 'REVISION'.
+#
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# CAREFUL: Note that 'eval' is employed to set the associative arrays named by
+#          V_NAME_ARY_ASSOC_RAW and V_NAME_ARY_ASSOC_NUM (because it is not
+#          (yet?) possible to access assign to arrays using namerefs).
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#
+# @param V_NAME_ARY_ASSOC_RAW (required) - The name of the associative array
+#        variable to set with the constituent parts of the screen(1) version
+#        number in their raw form (values may contain leading zeros and
+#        non-digit characters). The key names will be 'MAJOR', 'MINOR', and
+#        'REVISION'.
+#
+# @param V_NAME_ARY_ASSOC_NUM (required) - The name of the associative array
+#        variable to set with the constituent parts of the screen(1) version
+#        number in a sanitized but lossy form (leading zeros will have been
+#        stripped, and non-digit characters will have been dropped). The key
+#        names will be 'MAJOR', 'MINOR', and 'REVISION'.
+#
+# @param SCREEN_VERSION_STRING (required) - The screen(1) version number
+#        string to parse (such as obtained by a call to
+#        f_obtain_screen_version_string_or_die(...)).
+#
+f_parse_screen_program_version_or_die () {
+
+    local __required_count=3
+    if test $# -ne ${__required_count}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with %d args; exactly %d required; bailing out\n" \
+               $# ${__required_count} 1>&2
+        exit 1
+    fi
+
+
+    local __t_variable_name_raw  # name of an output variable (an associative array)
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_variable_name_raw' 1>&2
+        exit 1
+    fi
+    __t_variable_name_raw=$1
+
+    if f_writable_legit_global_assoc_ary_bash_identifier_p "${__t_variable_name_raw}"; then :; else
+        printf "${PROG} (BUG): ${FUNCNAME}(): value provided for V_NAME_ARY_ASSOC_RAW argument (\"%s\") is not a legit, writable global associative array identifier; bailing out\n" \
+               "${__t_variable_name_raw}" 1>&2
+        exit 1
+    fi
+
+
+    local __t_variable_name_num  # name of an output variable (an associative array)
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_variable_name_num' 1>&2
+        exit 1
+    fi
+    __t_variable_name_num=$2
+
+    if f_writable_legit_global_assoc_ary_bash_identifier_p "${__t_variable_name_num}"; then :; else
+        printf "${PROG} (BUG): ${FUNCNAME}(): value provided for V_NAME_ARY_ASSOC_NUM argument (\"%s\") is not a legit, writable global associative array identifier; bailing out\n" \
+               "${__t_variable_name_num}" 1>&2
+        exit 1
+    fi
+
+
+    local __t_screen_version_string
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_screen_version_string' 1>&2
+        exit 1
+    fi
+    __t_screen_version_string=$3
+
+    if test -z "${__t_screen_version_string}"; then
+        printf "${PROG} (BUG): ${FUNCNAME}() value provided for SCREEN_VERSION_STRING param may not be the empty string; bailing out\n" 1>&2
+        exit 1
+    fi
+    if [[ ${__t_screen_version_string} =~ ^[[:space:]]*$ ]]; then
+        printf "${PROG} (BUG): ${FUNCNAME}() invoked with blank value for required SCREEN_VERSION_STRING param; bailing out\n" 1>&2
+        exit 1
+    fi
+
+
+    local __t_local_major_raw ; local __t_local_major_num
+    local __t_local_minor_raw ; local __t_local_minor_num
+    local __t_local_revis_raw ; local __t_local_revis_num
+
+    # HINT: For examples of screen(1) version strings seen in the wild, see
+    #       the comments in f_obtain_screen_version_string_or_die().
+
+    # Alphanumerics (typically just digits) through the first dot are the major version number
+    #
+    __t_local_major_raw=$(echo "${__t_screen_version_string}" | sed -n -e 's#^\([[:alnum:]]\{1,\}\)[.].*#\1#p')
+
+    if test -z "${__t_local_major_raw}"; then
+        printf "${PROG} (warning): was unable to determine the major version number of screen\n" 1>&2
+        return 1  # false
+    fi
+
+    # Alphanumerics (typically just digits) between the first and second dot are the minor version number
+    #
+    __t_local_minor_raw=$(echo "${__t_screen_version_string}" | sed -n -e 's#^[[:alnum:]]\{1,\}[.]\([[:alnum:]]\{1,\}\)[.].*#\1#p')
+
+    if test -z "${__t_local_minor_raw}"; then
+        printf "${PROG} (warning): was unable to determine the minor version number of screen\n" 1>&2
+        return 1  # false
+    fi
+
+    # Alphanumerics (often just digits, but non-digits have been seen in the wild) after the second dot are the revision number
+    #
+    __t_local_revis_raw=$(echo "${__t_screen_version_string}" | sed -n -e 's#^[[:alnum:]]\{1,\}[.][[:alnum:]]\{1,\}[.]\([[:alnum:]]\{1,\}\).*#\1#p')
+
+    if test -z "${__t_local_revis_raw}"; then
+        printf "${PROG} (warning): was unable to determine the revision number of screen\n" 1>&2
+        return 1  # false
+    fi
+
+    # The MAJOR.MINOR.REVISION numbers reported by 'screen --version'
+    # typically contain leading zeros which would cause the decimal numbers to
+    # be interpretted as octal numbers, and may contain non-digit characters
+    # that we are not interested in for purposes of numeric comparison.
+    #
+    # We'll take all leading digits to be the numeric portion of the version
+    # number component. This allows for treating values such as:
+    #
+    #     4.00.03jw4
+    #
+    # as major: 4, minor: 0, and revision: 4 (it ignores the 'jw4' portion in
+    # the revision). Once we have the numeric portion isolated, we then
+    # effectively slice-off the leading zeros by telling the shell that we
+    # want the base 10 values.
+    # 
+    __t_local_major_num=$((10#${__t_local_major_raw/%[^[:digit:]]*/}))
+    __t_local_minor_num=$((10#${__t_local_minor_raw/%[^[:digit:]]*/}))
+    __t_local_revis_num=$((10#${__t_local_revis_raw/%[^[:digit:]]*/}))
+
+    f_set_named_assoc_array_or_die "${__t_variable_name_raw}" \
+                                   'MAJOR'    ${__t_local_major_raw} \
+                                   'MINOR'    ${__t_local_minor_raw} \
+                                   'REVISION' ${__t_local_revis_raw}
+
+    f_set_named_assoc_array_or_die "${__t_variable_name_num}" \
+                                   'MAJOR'    ${__t_local_major_num} \
+                                   'MINOR'    ${__t_local_minor_num} \
+                                   'REVISION' ${__t_local_revis_num}
+
+    return 0;  # success
+}
+
+
+# Checks the 'MAJOR' and 'MINOR' keys of the associative array named in
+# SCREEN_VERSION_ASSOC_ARY_NAME, and returns success ("true") or failure
+# ("false") to indicates whether or not the GNU screen(1) program version
+# being used is 4.3.0 or newer.
+#
+# Exits with an error status upon any processing error.
+#
+# @param SCREEN_VERSION_ASSOC_ARY_NAME (required) - The name of a global
+#        associative array variable representing the screen(1) version number
+#        as numerals only (e.g., as produced for te V_NAME_ARY_ASSOC_NUM param
+#        of a call to f_parse_screen_program_version_or_die(...). The assoc
+#        array needs to be declared by the caller and accessible here by name
+#        -- that's just due to the fact that bash cannot (yet?) pass assoc
+#        array variables by reference to functions; we use a nameref, instead,
+#        which is close enough for our needs here (since we are not assigning
+#        to it).
+#
 f_is_screen_4_dot_3_or_newer () {
 
     local __t_required_count=1
@@ -213,58 +1036,58 @@ f_is_screen_4_dot_3_or_newer () {
         exit 1
     fi
 
-    local __t_fpath_prog_screen
-    local __t_screen_version_number_snippet
+    local __t_screen_version_assoc_ary_name
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to declare local variable named \"%s\"; bailing out\n" '__t_screen_version_assoc_ary_name' 1>&2
+        exit 1
+    fi
+    __t_screen_version_assoc_ary_name=$1
 
-    __t_fpath_prog_screen=$1
+    if f_legit_global_assoc_ary_bash_identifier_p "${__t_screen_version_assoc_ary_name}"; then :; else
+        printf "${PROG} (BUG): ${FUNCNAME}(): value provided for SCREEN_VERSION_ASSOC_ARY_NAME argument (\"%s\") is not a legit global associative array identifier; bailing out\n" \
+               "${__t_screen_version_assoc_ary_name}" 1>&2
+        exit 1
+    fi
 
+    local -n __t_screen_version_assoc_ary_name
+    if test $? -ne 0; then
+        printf "${PROG} (BUG): ${FUNCNAME}() was unable to give local variable named \"%s\" the nameref attribute; bailing out\n" '__t_screen_version_assoc_ary_name' 1>&2
+        exit 1
+    fi
+
+
+    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): count of members of SCREEN_VERSION_ASSOC_ARY_NAME:     ${#__t_screen_version_assoc_ary_name[@]}
+
+    if test 0 -eq ${#__t_screen_version_assoc_ary_name[@]}; then
+        printf "${PROG} (BUG): ${FUNCNAME}() value provided for SCREEN_VERSION_ASSOC_ARY_NAME param may not be the name of an empty array; bailing out\n" 1>&2
+        exit 1
+    fi
 
     # Examples of how GNU screen advertizes its version:
     #
     #     Screen version 4.00.03jw4 (FAU) 2-May-06
     #     Screen version 4.03.01 (GNU) 28-Jun-15
-
-    # XXX: This could fail on some mutant compilation of GNU screen
-    #
-    __t_screen_version_number_snippet=$( "${__t_fpath_prog_screen}" --version \
-                                         | head -n 1 \
-                                         | sed -n -e 's#^[^[:digit:].]\{1,\}\([[:digit:]]\{1,\}[.][[:digit:]]\{1,\}[.][[:digit:]]\{1,\}\).*#\1#p' )
-
-    if test $? -ne 0; then
-        return 1  # error
-    fi
-
-    # FIXME: Pass this value in as a parameter
-    SCREEN_VERSION_STRING=${__t_screen_version_number_snippet}
+    #     Screen version 4.05.00 (GNU) 10-Dec-16
 
     local __t_local_major
     local __t_local_minor
 
-    # Digits through the first dot are the major version number
-    #
-    __t_local_major=$(echo "${__t_screen_version_number_snippet}" | sed -n -e 's#^\([^.]\{1,\}\)[.].*#\1#p')
-
+    __t_local_major=${__t_screen_version_assoc_ary_name['MAJOR']}
     if test -z "${__t_local_major}"; then
         printf "${PROG} (warning): was unable to determine the major version number of screen\n" 1>&2
-        return 1  # false
+
+        : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): non-die-worthy error encountered. Returning failure \(1\) for false.
+        return 1  # XXX: error, but not really die-worthy?
     fi
 
-    # Digits between the first and second dot are the minor version number
-    #
-    __t_local_minor=$(echo "${__t_screen_version_number_snippet}" | sed -n -e 's#^[^.]\{1,\}[.]\([[:digit:]]\{1,\}\)[.].*#\1#p')
-
+    __t_local_minor=${__t_screen_version_assoc_ary_name['MINOR']}
     if test -z "${__t_local_minor}"; then
         printf "${PROG} (warning): was unable to determine the minor version number of screen\n" 1>&2
-        return 1  # false
+
+        : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): non-die-worthy error encountered. Returning failure \(1\) for false.
+        return 1  # XXX: error, but not really die-worthy?
     fi
 
-    # The MAJOR.MINOR.REVISION numbers reported by 'screen --version'
-    # typically contain leading zeros which would cause the decimal numbers to
-    # be interpretted as octal numbers. We'll slice off the leading zeroes to
-    # avoid that by explicitly telling the shell that we want the base 10
-    # values.
-    __t_local_major=$((10#${__t_local_major}))
-    __t_local_minor=$((10#${__t_local_minor}))
 
     # Note that there's a third 'revision' component to the advertized GNU
     # screen version number that we're ignoring here. We'll return a success
@@ -272,12 +1095,12 @@ f_is_screen_4_dot_3_or_newer () {
 
     if test ${__t_local_major} -ge 4 \
     && test ${__t_local_minor} -ge 3; then
-        printf 'true\n'
-        return 0  # success; found version of screen is 4.3.0 or newer
+        : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): screen version is 4.3.0 or newer. Returning success \(0\) for true.
+        return 0  # success (true); found version of screen is 4.3.0 or newer
     fi
 
-    printf 'false\n'
-    return 0  # success; found version of screen is older than 4.3.0
+    : $PROG \(trace: $LINENO\): ${FUNCNAME}\(\): screen version IS NOT 4.3.0 or newer. Returning success \(1\) for false.
+    return 1  # success (false); found version of screen is older than 4.3.0
 }
 
 
@@ -589,19 +1412,23 @@ fi
 # We want to work with either version, though, so we'll dynamically test the
 # major.minor version numbers and adjust our behavior accordingly.
 #
-# FIXME: go (need an invocation in the current process to set SCREEN_VERSION_STRING)
-f_is_screen_4_dot_3_or_newer "${PROG_SCREEN}" > /dev/null
-if test $? -ne 0; then
-    printf "${PROG} (error): was unable to set the version string for the available GNU screen program: \"%s\"; bailing out\n" \
-           "${PROG_SCREEN}" 1>&2
-    exit 1
-fi
-# FIXME: end
-have_screen_4_dot_3_or_newer=$(f_is_screen_4_dot_3_or_newer "${PROG_SCREEN}")
-if test $? -ne 0; then
-    printf "${PROG} (error): was unable to obtain the version of the available GNU screen program: \"%s\"; bailing out\n" \
-           "${PROG_SCREEN}" 1>&2
-    exit 1
+f_obtain_screen_version_string_or_die 'SCREEN_VERSION_STRING' "${PROG_SCREEN}"
+#
+# Parse the screen(1) program version, setting into two new assoc arrays
+# (which we pre-declare here) with its constituent parts (one with the literal
+# pieces, the other with just the numeric portions (which we consider "close
+# enough" for our check here).
+#
+declare -A SCREEN_VERSION_ARRAY_RAW  # may contain non-numeric bits (e.g., from "4.00.03jw4")
+declare -A SCREEN_VERSION_ARRAY_NUMERIC_ONLY
+
+f_parse_screen_program_version_or_die 'SCREEN_VERSION_ARRAY_RAW'          \
+                                      'SCREEN_VERSION_ARRAY_NUMERIC_ONLY' \
+                                      "${SCREEN_VERSION_STRING}"
+
+have_screen_4_dot_3_or_newer=false
+if f_is_screen_4_dot_3_or_newer 'SCREEN_VERSION_ARRAY_NUMERIC_ONLY'; then
+    have_screen_4_dot_3_or_newer=true
 fi
 #
 # CAREFUL: The value of SCREEN_LS_ESTAT should match the value here only when
@@ -1310,13 +2137,13 @@ Written by Alan D. Salewski <salewski@att.net>.
 =cut
 
 # Copyright symbol gets munged by pod2man(1), so we'll fall back on using '(C)'
-# Copyright © 2013, 2016, 2017 Alan D. Salewski <salewski@att.net>
+# Copyright © 2013, 2016, 2017, 2019 Alan D. Salewski <salewski@att.net>
 
 =pod 
 
 =head1 COPYLEFT
 
-Copyright (C) 2013, 2016, 2017 Alan D. Salewski <salewski@att.net>
+Copyright (C) 2013, 2016, 2017, 2019 Alan D. Salewski <salewski@att.net>
 
 License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.

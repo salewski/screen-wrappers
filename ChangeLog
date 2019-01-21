@@ -1,3 +1,21 @@
+2019-01-21  Alan D. Salewski  <salewski@att.net>
+
+	* src/main/bash/bin/screen-ls.in (DATA_SCREEN_Q_LS_OUTPUT): remove
+	- updated copyright dates (add current year (2019))
+	- enable bash's 'pipefail' globally
+	(COPYRIGHT_DATES): update
+	(RE_LEGIT_BASH_IDENTIFIER): new global variable (regex)
+	(f_legit_bash_identifier_p): new function (predicate)
+	(__f_legit_global_assoc_ary_bash_identifier_helper_or_die): new function
+	(f_legit_global_assoc_ary_bash_identifier_p): new function (predicate)
+	(f_readonly_legit_global_assoc_ary_bash_identifier_p): new function (predicate)
+	(f_writable_legit_global_assoc_ary_bash_identifier_p): new function (predicate)
+	(f_set_named_scalar_or_die): new function
+	(f_set_named_assoc_array_or_die): new function
+	(f_obtain_screen_version_string_or_die): new function
+	(f_parse_screen_program_version_or_die): new function
+	(f_is_screen_4_dot_3_or_newer): new function
+
 2017-05-19  Alan D. Salewski  <salewski@att.net>
 
 	* src/main/bash/bin/screen-ls.in (DATA_SCREEN_Q_LS_OUTPUT): remove
