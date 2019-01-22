@@ -76,6 +76,13 @@ fixed will be noted here, as well.
     checking of the exit status of the invocation).
 
 
+*** issue #12: update 'HACKING' file to reflect current versions of GNU autotools, and similar
+
+    https://github.com/salewski/screen-wrappers/issues/12
+
+    The HACKING file now reflects the author's use of automake 1.15.
+
+
 *** issue #11: screen-ls: unset GREP_OPTIONS to prevent warning from GNU grep 2.11+
 
     https://github.com/salewski/screen-wrappers/issues/11
