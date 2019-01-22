@@ -199,7 +199,13 @@
 
 <ul>
 
-<li><p>Internally checks that the exit status of <code>screen -ls</code> is 1 because empirical testing reveals that that is the exit status returned even upon success (unless we were to add the <code>-q</code> option, which would have the undesirable effect of suppressing the output we are trying to format). See comments in <code>screen-ls</code> source code for more details.</p>
+<li><p>Internally checks that the exit status of <code>screen -ls</code> is 1 when it detects that the underlying <code>screen</code> version is older than <code>4.0.3</code> (released 2015-06-12, advertized as <code>4.03.00</code> by <code>screen --version</code>). Those older versions have a bug that causes the <code>screen -ls</code> command to exit with status 1 upon success even when existing screen sessions are detected.</p>
+
+<p>For info on the upstream bug see:</p>
+
+<pre><code>    &lt;http://savannah.gnu.org/bugs/?26750&gt;</code></pre>
+
+<p>See comments in <code>screen-ls</code> source code for more details (HINT: grep for <code>SCREEN_LS_ESTAT</code>).</p>
 
 </li>
 </ul>
@@ -216,7 +222,7 @@
 
 <h1 id="COPYLEFT">COPYLEFT</h1>
 
-<p>Copyright (C) 2013, 2016 Alan D. Salewski &lt;salewski@att.net&gt;</p>
+<p>Copyright (C) 2013, 2016, 2017, 2019 Alan D. Salewski &lt;salewski@att.net&gt;</p>
 
 <p>License GPLv2+: GNU GPL version 2 or later &lt;http://gnu.org/licenses/gpl.html&gt;. This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent permitted by law.</p>
 
