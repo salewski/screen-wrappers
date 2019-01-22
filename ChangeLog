@@ -1,5 +1,12 @@
 2019-01-21  Alan D. Salewski  <salewski@att.net>
 
+	RELEASED screen-wrappers 0.3.3
+
+	* configure: regenerated
+	* configure.ac: set version to 0.3.3 for release
+	* NEWS: set release date for screen-wrappers 0.3.3
+
+	[github issue #12]:
 	* HACKING: Project is now using GNU Automake 1.15 rather than 1.14.1
 	* bootstrap (AUTOMAKE): specify automake-1.14 rather than automake-1.11
 	(ACLOCAL): specify aclocal-1.15 rather than aclocal-1.14
@@ -14,6 +21,7 @@
 	* src/main/bash/Makefile.in: likewise
 	* src/main/bash/bin/Makefile.in: likewise
 
+	[github issue #14]:
 	* src/main/bash/bin/screen-ls.in (DATA_SCREEN_Q_LS_OUTPUT): remove
 	- updated copyright dates (add current year (2019))
 	- enable bash's 'pipefail' globally
