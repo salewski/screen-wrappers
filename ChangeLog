@@ -1,5 +1,12 @@
 2019-01-26  Alan D. Salewski  <salewski@att.net>
 
+	RELEASED screen-wrappers 0.3.4
+
+	* NEWS: set release date for screen-wrappers 0.3.4
+	* configure.ac: set version to 0.3.4 for release
+	* configure: regenerated
+
+
 	[github issue #15]:
 	* src/main/bash/bin/screen-ls.in (SCREEN_VERSION_ARRAY_RAW): explicitly initialize as empty
 	(SCREEN_VERSION_ARRAY_NUMERIC_ONLY): likewise
