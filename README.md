@@ -9,12 +9,12 @@ The 'screen-wrappers' project web site is:
 
    * https://salewski.github.io/screen-wrappers/
 
-The latest version of the project is `0.3.3` (released `2019-01-21`), and can be downloaded from:
+The latest version of the project is `0.3.4` (released `2019-01-26`), and can be downloaded from:
 
-   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.3.tar.gz
-   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.3.tar.gz.SHA-1
-   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.3.tar.gz.SHA-256
-   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.3.tar.gz.SHA3-256
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.4.tar.gz
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.4.tar.gz.SHA-1
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.4.tar.gz.SHA-256
+   * https://salewski.github.io/screen-wrappers/downloads/screen-wrappers-0.3.4.tar.gz.SHA3-256
     
 Older releases are available from the project's downloads page:
 
@@ -62,7 +62,7 @@ prerequisites as they should be present on any modern Unix or GNU/Linux system
 The `'screen-ls'` program (and possibly other tools in the `'screen-wrappers'`
 project) is implemented in Bash (a Bourne shell derivative). The most recent
 version of the 'screen-wrappers' project was developed and tested using Bash
-versions 4.4.23. It uses associative arrays which were added in Bash 4.0, so
+versions 4.4.23 and 5.0.0. It uses associative arrays which were added in Bash 4.0, so
 you'll need a 4.x version or newer; the `'configure'` script will check for
 this and exit with an error message if a new enough version of Bash is not
 found. The author would appreciate hearing about any successes or failures

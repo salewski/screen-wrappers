@@ -1,5 +1,11 @@
 2019-01-26  Alan D. Salewski  <salewski@att.net>
 
+	* NEWS: created empty news section for future 0.3.5 release
+	* configure.ac: set version to 0.3.5-snapshot for next dev cycle
+	* configure: regenerated
+	* README.md: referenced version 0.3.4 as "latest", etc
+
+
 	RELEASED screen-wrappers 0.3.4
 
 	* NEWS: set release date for screen-wrappers 0.3.4
