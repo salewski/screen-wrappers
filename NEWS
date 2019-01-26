@@ -1,4 +1,4 @@
--*- org -*-
+# -*- org -*-
 
 #+STARTUP: hidestars oddeven
 
@@ -14,7 +14,44 @@ fixed will be noted here, as well.
 
 ** fixes
 
-   (none)
+*** issue #15: screen-ls: explicitly initialize array variables to work with bash-4.x older than bash-4.4-alpha
+
+    https://github.com/salewski/screen-wrappers/issues/15
+
+    This bug was due to 'screen-ls' inadvertently relying on a change
+    implmented for bash-4.4. From the CHANGES file section for bash-4.4-alpha:
+
+    #+BEGIN_QUOTE
+        f.  The `-p' option to declare and similar builtins will display attributes for
+            named variables even when those variables have not been assigned values
+            (which are technically unset).
+    #+END_QUOTE
+
+    When a version of bash-4.x prior to bash-4.4-alpha was being used, the
+    'screen-ls' program would emit the following error:
+
+    #+BEGIN_QUOTE
+        $ screen-ls
+        screen-ls (BUG): f_parse_screen_program_version_or_die(): value provided for V_NAME_ARY_ASSOC_RAW argument ("SCREEN_VERSION_ARRAY_RAW") is not a legit, writable global associative array identifier; bailing out
+    #+END_QUOTE
+
+    The source of that error was a change was made ([[https://github.com/salewski/screen-wrappers/commit/d3024d90b735ef6e884e7ff50a21d56ae17a0c02][commit: d3024d90b735ef6e884e7ff50a21d56ae17a0c02]])
+    in the 'screen-ls' program as distributed with recently released
+    screen-wrappers-0.3.3 that declared two global associative array variables
+    without assigning values to them:
+
+    #+BEGIN_SRC bash
+        declare -A SCREEN_VERSION_ARRAY_RAW  # may contain non-numeric bits (e.g., from "4.00.03jw4")
+        declare -A SCREEN_VERSION_ARRAY_NUMERIC_ONLY
+    #+END_SRC
+
+    In order to work with earlier versions of bash-4.x, we needed to
+    explicitly initialize those variables with empty values:
+
+    #+BEGIN_SRC bash
+        declare -A SCREEN_VERSION_ARRAY_RAW=()  # may contain non-numeric bits (e.g., from "4.00.03jw4")
+        declare -A SCREEN_VERSION_ARRAY_NUMERIC_ONLY=()
+    #+END_SRC
 
 
 ** improvements

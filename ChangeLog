@@ -1,3 +1,10 @@
+2019-01-26  Alan D. Salewski  <salewski@att.net>
+
+	[github issue #15]:
+	* src/main/bash/bin/screen-ls.in (SCREEN_VERSION_ARRAY_RAW): explicitly initialize as empty
+	(SCREEN_VERSION_ARRAY_NUMERIC_ONLY): likewise
+	* NEWS: noted above change
+
 2019-01-21  Alan D. Salewski  <salewski@att.net>
 
 	* NEWS: created empty news section for future 0.3.4 release

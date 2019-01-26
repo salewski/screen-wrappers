@@ -1419,8 +1419,13 @@ f_obtain_screen_version_string_or_die 'SCREEN_VERSION_STRING' "${PROG_SCREEN}"
 # pieces, the other with just the numeric portions (which we consider "close
 # enough" for our check here).
 #
-declare -A SCREEN_VERSION_ARRAY_RAW  # may contain non-numeric bits (e.g., from "4.00.03jw4")
-declare -A SCREEN_VERSION_ARRAY_NUMERIC_ONLY
+# CAREFUL: In order to work with versions of bash-4.x older than
+#          bash-4.4-alpha, it is not enough to simply declare the variables to
+#          be associative arrays; they must be explicitly initialized as empty
+#          arrays.  See: https://github.com/salewski/screen-wrappers/issues/15
+#
+declare -A SCREEN_VERSION_ARRAY_RAW=()  # may contain non-numeric bits (e.g., from "4.00.03jw4")
+declare -A SCREEN_VERSION_ARRAY_NUMERIC_ONLY=()
 
 f_parse_screen_program_version_or_die 'SCREEN_VERSION_ARRAY_RAW'          \
                                       'SCREEN_VERSION_ARRAY_NUMERIC_ONLY' \
