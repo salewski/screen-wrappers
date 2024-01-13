@@ -4,6 +4,14 @@
 	* src/main/bash/bin/screen-ls.in: restore use of shebang line
 	- updated copyright dates (add current year (2024))
 	* NEWS: noted above change
+	* Makefile.in: regenerated
+	* aclocal.m4: likewise
+	* doc/Makefile.in: likewise
+	* doc/html/Makefile.in: likewise
+	* src/Makefile.in: likewise
+	* src/main/Makefile.in: likewise
+	* src/main/bash/Makefile.in: likewise
+	* src/main/bash/bin/Makefile.in: likewise
 
 2019-01-26  Alan D. Salewski  <salewski@att.net>
 
