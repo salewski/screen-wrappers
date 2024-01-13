@@ -10,11 +10,32 @@ fixed will be noted here, as well.
 
 ------------------------------------------------------------------------------
 
-* screen-wrappers 0.3.5 (TBD: 2019-??-??)
+* screen-wrappers 0.3.5 (TBD: 2024-??-??)
 
 ** fixes
 
-   (none)
+*** issue #21: screen-ls: shebang line is missing
+
+    https://github.com/salewski/screen-wrappers/issues/21
+
+    At build time, a shebang line should be inserted into the generated
+    'screen-ls' program, using the 'bash' executable found at configure
+    time. The build used to do so, and has been fixed to do so again.
+
+    This bug was introduced in screen-wrappers 0.3.3 (released 2019-01-21),
+    and went undetected for years -- probably because using Bash for one's
+    interactive shell is so common; the script happens to work when Bash is
+    the the user's interactive shell, or when invoked from a script that Bash
+    is running. The reason is due to the long-standing Unix tradition of
+    treating text files as shell scripts when their executable bit is set,
+    even if they lack a shebang line. (That behavior predates the invention of
+    the shebang line.) The system returns ENOEXEC to the invoking process, and
+    in the case of Bash the shell attempts to interpret the lines of the text
+    file as shell commands. (Other shells do something similar, or explicitly
+    invoke /bin/sh with the text file as an argument.)
+
+    It was never intended that the screen-ls program would depend on the above
+    described behavior.
 
 
 ** improvements

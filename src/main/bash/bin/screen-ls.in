@@ -1,6 +1,7 @@
+#! @BASH_SH@ -
 # @configure_input@
 #
-# Copyright (C) 2013, 2016, 2017, 2019 Alan D. Salewski <salewski@att.net>
+# Copyright (C) 2013, 2016, 2017, 2019, 2024 Alan D. Salewski <ads@salewski.email>
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -38,7 +39,7 @@ set -o pipefail
 
 declare -r PROG='screen-ls'
 
-declare -r COPYRIGHT_DATES='2013, 2016, 2017, 2019'
+declare -r COPYRIGHT_DATES='2013, 2016, 2017, 2019, 2024'
 
 declare -r gl_maintainer_addr='@DFLT_MAINTAINER@'  # filtered in at build time
 
@@ -209,7 +210,7 @@ f_print_version () {
     cat <<EOF
 ${PROG} ${gl_const_release}
 
-Copyright (C) ${COPYRIGHT_DATES} Alan D. Salewski <salewski@att.net>
+Copyright (C) ${COPYRIGHT_DATES} Alan D. Salewski <ads@salewski.email>
 License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
@@ -2131,7 +2132,7 @@ L</"AUTHOR">
 
 =head1 AUTHOR
 
-Written by Alan D. Salewski <salewski@att.net>.
+Written by Alan D. Salewski <ads@salewski.email>.
 
 
 =head1 CONTRIBUTORS
@@ -2142,13 +2143,13 @@ Written by Alan D. Salewski <salewski@att.net>.
 =cut
 
 # Copyright symbol gets munged by pod2man(1), so we'll fall back on using '(C)'
-# Copyright © 2013, 2016, 2017, 2019 Alan D. Salewski <salewski@att.net>
+# Copyright © 2013, 2016, 2017, 2019, 2024 Alan D. Salewski <ads@salewski.email>
 
 =pod 
 
 =head1 COPYLEFT
 
-Copyright (C) 2013, 2016, 2017, 2019 Alan D. Salewski <salewski@att.net>
+Copyright (C) 2013, 2016, 2017, 2019, 2024 Alan D. Salewski <ads@salewski.email>
 
 License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
