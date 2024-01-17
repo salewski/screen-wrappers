@@ -1897,8 +1897,8 @@ C<.> char) from the output of the C<screen -ls> command.
 With the C<-l> (C<--long>) option, will print the full output in a readable
 table.
 
-With the C<-p> (C<--show-pid>) option, will include the pid and <.> char which
-are suppressed by default.
+With the C<-p> (C<--show-pid>) option, will include the pid and C<.> char
+which are suppressed by default.
 
 Any options not recognized by C<screen-ls> will be passed through to
 L<screen(1)>. You can explicitly stop C<screen-ls> options processing by using
