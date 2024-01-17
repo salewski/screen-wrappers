@@ -1703,7 +1703,7 @@ if $opt_show_long; then
 
     builtin echo "${DATA_SCREEN_LS_OUTPUT}" \
     | tail -n +2 \
-    | head -n -2 \
+    | head -n -1 \
     | $chop_pid_command \
     | while read -r line; do
 

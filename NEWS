@@ -45,6 +45,16 @@ fixed will be noted here, as well.
     described behavior.
 
 
+*** issue #23: screen-ls: missing last line of output when '-l' (--long) option is specified
+
+    https://github.com/salewski/screen-wrappers/issues/23
+
+    When the '-l' (--long) command line option was provided, the 'screen-ls'
+    command was overly agressive in filtering the output of the underlying GNU
+    'screen' command output. The result was that the last line of desired
+    output was missing. This has now been fixed.
+
+
 ** improvements
 
 *** issue #20: add spdx tags to program sources
