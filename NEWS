@@ -14,6 +14,13 @@ fixed will be noted here, as well.
 
 ** fixes
 
+*** issue #19: doc: screen-ls(1): <.> displayed instead of '.'
+
+    https://github.com/salewski/screen-wrappers/issues/19
+
+    Fixed minor POD typo in screen-ls(1).
+
+
 *** issue #21: screen-ls: shebang line is missing
 
     https://github.com/salewski/screen-wrappers/issues/21
