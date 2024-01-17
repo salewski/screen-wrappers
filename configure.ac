@@ -1,5 +1,10 @@
 dnl Process this file with autoconf to produce a configure script. -*-Autoconf-*-
 
+dnl SPDX-FileCopyrightText: <text>
+dnl     © 2013, 2016, 2019, 2024 Alan D. Salewski <ads@salewski.email>
+dnl </text>
+dnl SPDX-License-Identifier: GPL-2.0-or-later
+
 dnl +-------------------------+
 dnl |  Autotools Boilerplate  |
 dnl +-------------------------+

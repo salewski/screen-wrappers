@@ -40,7 +40,9 @@ fixed will be noted here, as well.
 
 ** improvements
 
-   (none)
+*** issue #20: add spdx tags to program sources
+
+    https://github.com/salewski/screen-wrappers/issues/20
 
 
 * screen-wrappers 0.3.4 (2019-01-26)
