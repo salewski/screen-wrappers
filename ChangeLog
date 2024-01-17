@@ -1,3 +1,19 @@
+2024-01-17  Alan D. Salewski  <salewski@att.net>
+
+	[github issue #20]:
+	* Makefile.am: add tags SPDX-FileCopyrightText, SPDX-License-Identifier
+	* bootstrap: likewise
+	* configure.ac: likewise
+	* doc/Makefile.am: likewise
+	* doc/html/Makefile.am: likewise
+	* doc/html/stylesheets/pod2html-manpage.css: likewise
+	* src/Makefile.am: likewise
+	* src/main/Makefile.am: likewise
+	* src/main/bash/Makefile.am: likewise
+	* src/main/bash/bin/Makefile.am: likewise
+	* src/main/bash/bin/screen-ls.in: likewise
+	* NEWS: noted above change
+
 2024-01-12  Alan D. Salewski  <salewski@att.net>
 
 	[github issue #21]:
