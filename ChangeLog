@@ -1,4 +1,10 @@
-2024-01-17  Alan D. Salewski  <salewski@att.net>
+2024-01-17  Alan D. Salewski  <ads@salewski.email>
+
+	[github issue #23]:
+	* AUTHORS: update maintainer email contact
+	* BUGS: likewise
+	* README.md: likewise
+	* configure.ac: likewise
 
 	[github issue #23]:
 	* src/main/bash/bin/screen-ls.in: 'head -n -1' rather than 'head -n -2'

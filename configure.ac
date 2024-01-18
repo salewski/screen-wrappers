@@ -9,7 +9,7 @@ dnl +-------------------------+
 dnl |  Autotools Boilerplate  |
 dnl +-------------------------+
 
-AC_INIT([screen-wrappers], [0.3.5-snapshot], [salewski@att.net])
+AC_INIT([screen-wrappers], [0.3.5-snapshot], [ads@salewski.email])
 
 dnl Ensure that a recent-enough version of Autoconf is being used
 AC_PREREQ([2.69])
@@ -24,7 +24,7 @@ dnl Turn on all Automake warnings and report them as errors
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 
-DFLT_MAINTAINER="Alan D. Salewski <salewski@att.net>"
+DFLT_MAINTAINER="Alan D. Salewski <ads@salewski.email>"
 AC_SUBST([DFLT_MAINTAINER])
 
 
