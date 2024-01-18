@@ -105,7 +105,7 @@ GPL version 2, or (at your option) any later version.
 
 See the [COPYING] file for the full license.
 
-Copyright (C) 2013, 2016, 2017, 2019 Alan D. Salewski <salewski@att.net>
+Copyright (C) 2013, 2016, 2017, 2019, 2024 Alan D. Salewski <ads@salewski.email>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
