@@ -5,6 +5,7 @@
 	* BUGS: likewise
 	* README.md: likewise
 	* configure.ac: likewise
+	* configure: regenerate
 
 	[github issue #23]:
 	* src/main/bash/bin/screen-ls.in: 'head -n -1' rather than 'head -n -2'
