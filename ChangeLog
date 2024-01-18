@@ -5,6 +5,7 @@
 	* BUGS: likewise
 	* README.md: likewise
 	* configure.ac: likewise
+	* NEWS: noted above change
 	* configure: regenerate
 
 	[github issue #23]:
